@@ -80,7 +80,7 @@ class match_info():
     def cur_player_embed(self):
         embed=discord.Embed(
             title = "참가자들 전적 보러가기!!",
-            url = "https://www.op.gg/multisearch/kr?summoners=" + self.cur_player_league(",").replace(),
+            url = "https://www.op.gg/multisearch/kr?summoners=" + self.cur_player_league(",").replace(" " , ""),
             color = discord.Color.green()
         )
         id, lid = str(), str()
