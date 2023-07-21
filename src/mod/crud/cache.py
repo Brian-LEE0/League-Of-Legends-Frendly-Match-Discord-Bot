@@ -23,6 +23,3 @@ def get_data_from_redis(key, expire):
     data = redis_client.get(key)
     redis_client.expire(key, expire) # 24시간 동안 데이터 유지
     return data
-
-save_data_to_redis("test", "test", 86400)
-print(get_data_from_redis("test", 86400))
