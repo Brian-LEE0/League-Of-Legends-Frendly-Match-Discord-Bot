@@ -2,7 +2,7 @@ import mod.discordbot
 import os
 from dotenv import load_dotenv
 
-SERVICE_STATE = "svc"
+SERVICE_STATE = "dev"
 
 if __name__ == "__main__":
     load_dotenv(f"./token_{SERVICE_STATE}.env") # load all the variables from the env file
