@@ -37,6 +37,7 @@ class match_info():
         ctn = self.notion_str.split("\n")
         ctn[2] = f"현재인원 : {len(self)}/{self.max}"
         ctn = "\n".join(ctn)
+        logger.info(f"{interaction.channel.mention} {interaction.user} 참가 신청")
         await self.notion_msg.edit_original_response(content = ctn)
         if len(self) == self.max :
             self.call_everyone_msg = await self.call_everyone(interaction)
