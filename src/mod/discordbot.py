@@ -134,7 +134,7 @@ class MatchInfo():
         embed = self.cur_player_embed()
         ctx = self.cur_player_mention()
         now = datetime.now(KST)
-        after30m = (now + timedelta(minutes=30)).strftime("%p %I시 %M분")
+        after30m = (now + timedelta(minutes=30)).strftime("%p %I시 %M분").replace("AM", "오전").replace("PM", "오후")
         logger.info(f"mention_everyone, match will be start at {after30m}")
         msg = f"{ctx}\n내전이 **{after30m}**에 시작될 예정입니다\n참가자 모두 빠짐없이 확인해주세요!"
         mention_everyone_msg = await interaction.response.send_message(msg, embed=embed)
