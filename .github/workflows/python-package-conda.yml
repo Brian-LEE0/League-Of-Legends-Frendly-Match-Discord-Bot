@@ -22,4 +22,6 @@ jobs:
       run: |
         cd src
         export SERVICE_STATE=svc
+        export BOT_TOKEN=${{ secrets.BOT_TOKEN }}
+        export RIOT_API_KEY=${{ secrets.RIOT_API_KEY }}
         python main.py
