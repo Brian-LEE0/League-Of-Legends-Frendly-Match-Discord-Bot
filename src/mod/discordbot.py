@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import pytz
 import re
 from mod.logger import setup_logger
+from mod.crud.id import generate_uuid
 
 KST = pytz.timezone('Asia/Seoul')
 now = datetime.now(KST)
@@ -106,24 +107,45 @@ class match_info():
             await self.call_everyone_msg.delete_original_response()
             self.call_everyone_msg = None
         await self.notion_msg.delete_original_response()
-        
+
 class MatchJoinView(discord.ui.View):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, key, timeout = None):
+        super().__init__(timeout=timeout)
+        self.key = key
     
-    @discord.ui.button(label="참가 신청", custom_id = "join" ,style=discord.ButtonStyle.green)
+    @discord.ui.button(label="참가 신청",style=discord.ButtonStyle.green)
     async def join(self, button, interaction):
-        key = interaction.message.channel.mention
-        if not Match[key].is_player_exist(interaction.user) :
-            await interaction.response.send_modal(MatchJoinForm(interaction.message,key,interaction.user))
+        logger.info(f"push join button id : {button.custom_id} key : {self.key}")
+        match = Match[self.key]
+        if not match.is_player_exist(interaction.user) :
+            await interaction.response.send_modal(MatchJoinForm(interaction.message,self.key,interaction.user))
         else :
             await interaction.response.send_message(f"이미 내전을 신청한 유저입니다.", ephemeral=True)
             
-        
-    @discord.ui.button(label="참가 철회", custom_id = "unjoin", style=discord.ButtonStyle.red) 
+    @discord.ui.button(label="참가 철회", style=discord.ButtonStyle.red) 
     async def unjoin(self, button, interaction):
-        key = interaction.message.channel.mention
-        await Match[key].remove_player(interaction.user, interaction)
+        logger.info(f"push unjoin button id : {button.custom_id} key : {self.key}")
+        match = Match[self.key]
+        await match.remove_player(interaction.user, interaction)
+        
+    @discord.ui.button(label="내전 정보", style=discord.ButtonStyle.blurple) 
+    async def match_info(self, button, interaction):
+        logger.info(f"push match_info button id : {button.custom_id} key : {self.key}")
+        match = Match[self.key]
+        embed = match.cur_player_embed()
+        msg = f"총 인원 : {len(match)}/{match.max}"
+        await interaction.response.send_message(msg, embed=embed, ephemeral=True) # Send a message with our View class that contains the button
+        
+    @discord.ui.button(label="내전 취소", style=discord.ButtonStyle.gray, emoji = "❌")
+    async def destroy(self, button, interaction):
+        logger.info(f"push destroy button id : {button.custom_id} key : {self.key}")
+        match = Match[self.key]
+        if match.creator.mention != interaction.user.mention :
+            await interaction.response.send_message(f"{match.creator.mention}님이 만든 내전을 삭제했습니다.\n{match.cur_player_mention()}\n내전이 취소되었습니다.") # Send a message with our View class that contains the button
+            Match.pop(self.key)
+            await match.del_message()
+        else :
+            await interaction.response.send_message(f"{interaction.user.mention}님이 생성한 매치가 아닙니다.", ephemeral=True)
     
 
 
@@ -188,37 +210,38 @@ class MatchJoinForm(discord.ui.Modal):
 @bot.slash_command(name="내전생성", description = "ex) /내전생성 {@리그오브레전드} {10}") # Create a slash command
 async def create_frendly_match(ctx, everyone: str, max: int = 10):
     global Match
-    key = ctx.channel.mention
+    key = generate_uuid()
     if key in Match :
         await ctx.response.send_message("이미 내전을 생성했습니다. \"/내전취소\"를 해주세요.", ephemeral=True)
     else :
         logger.info(f"{ctx.channel.name} {ctx.author.name} 내전 생성 완료")
         notion_str = f"{everyone}\n{ctx.author.mention} 님이 내전을 생성하였습니다. 참가를 원하시는 분은 아래 버튼을 눌러주세요.\n현재인원 : 0/{max}"
-        interaction = await ctx.response.send_message(notion_str, view=MatchJoinView())
+        interaction = await ctx.response.send_message(notion_str, view=MatchJoinView(key))
         Match[key] = match_info(ctx.author, interaction, notion_str, max)
+        logger.info(f"Match key : {key}")
 
-@bot.slash_command(name="내전정보", description = "ex) /내전정보") # Create a slash command
-async def info_frendly_match(ctx):
-    global Match
-    key = ctx.channel.mention
-    if key in Match :
-        embed = Match[key].cur_player_embed()
-        msg = f"총 인원 : {len(Match[key])}/{Match[key].max}"
-        await ctx.response.send_message(msg, embed=embed, ephemeral=True) # Send a message with our View class that contains the button
-    else :
-        await ctx.response.send_message("현재 {ctx.author.mention}님이 생성한 매치가 없습니다.", ephemeral=True) # Send a message with our View class that contains the button
+# @bot.slash_command(name="내전정보", description = "ex) /내전정보") # Create a slash command
+# async def info_frendly_match(ctx):
+#     global Match
+#     key = ctx.channel.mention
+#     if key in Match :
+#         embed = Match[key].cur_player_embed()
+#         msg = f"총 인원 : {len(Match[key])}/{Match[key].max}"
+#         await ctx.response.send_message(msg, embed=embed, ephemeral=True) # Send a message with our View class that contains the button
+#     else :
+#         await ctx.response.send_message("현재 {ctx.author.mention}님이 생성한 매치가 없습니다.", ephemeral=True) # Send a message with our View class that contains the button
         
     
-@bot.slash_command(name="내전취소", description = "ex) /내전취소") # Create a slash command
-async def remove_frendly_match(ctx):
-    global Match
-    key = ctx.channel.mention
-    if not key in Match or ctx.author != Match[key].creator :
-        await ctx.response.send_message("현재 {ctx.author.mention}님이 생성한 매치가 없습니다.", ephemeral=True)
-    else :
-        await ctx.response.send_message(f"{ctx.author.mention}님이 만든 내전을 삭제했습니다.\n{Match[key].cur_player_mention()}\n내전이 취소되었습니다.") # Send a message with our View class that contains the button
-        await Match[key].del_message()
-        Match.pop(key)
+# @bot.slash_command(name="내전취소", description = "ex) /내전취소") # Create a slash command
+# async def remove_frendly_match(ctx):
+#     global Match
+#     key = ctx.channel.mention
+#     if not key in Match or ctx.author != Match[key].creator :
+#         await ctx.response.send_message("현재 {ctx.author.mention}님이 생성한 매치가 없습니다.", ephemeral=True)
+#     else :
+#         await ctx.response.send_message(f"{ctx.author.mention}님이 만든 내전을 삭제했습니다.\n{Match[key].cur_player_mention()}\n내전이 취소되었습니다.") # Send a message with our View class that contains the button
+#         await Match[key].del_message()
+#         Match.pop(key)
         
 ########################## BOT COMMANDS ##########################   
 
