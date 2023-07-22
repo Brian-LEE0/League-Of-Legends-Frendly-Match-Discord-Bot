@@ -157,7 +157,7 @@ class MatchJoinView(discord.ui.View):
         if not match.is_player_exist(interaction.user):
             await interaction.response.send_modal(MatchJoinForm(interaction.message, self.key, interaction.user))
         else:
-            await interaction.response.send(f"이미 내전을 신청한 유저입니다.", ephemeral=True)
+            await interaction.response.send_message(f"이미 내전을 신청한 유저입니다.", ephemeral=True)
 
     @discord.ui.button(label="참가 철회", style=discord.ButtonStyle.red)
     async def unjoin(self, button, interaction):
