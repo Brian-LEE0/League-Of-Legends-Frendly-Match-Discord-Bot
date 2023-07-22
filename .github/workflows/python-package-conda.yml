@@ -21,4 +21,5 @@ jobs:
     - name: run with conda
       run: |
         cd src
+        export SERVICE_STATE=svc
         python main.py
