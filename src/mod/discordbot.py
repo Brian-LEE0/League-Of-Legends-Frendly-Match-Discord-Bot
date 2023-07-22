@@ -6,7 +6,6 @@ from mod.logger import setup_logger
 from mod.crud.id import generate_uuid
 
 KST = pytz.timezone('Asia/Seoul')
-now = datetime.now(KST)
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -134,8 +133,9 @@ class MatchInfo():
     async def mention_everyone(self, interaction):
         embed = self.cur_player_embed()
         ctx = self.cur_player_mention()
-        after30m = (now + timedelta(minutes=30)).strftime("%H시%M분")
-
+        now = datetime.now(KST)
+        after30m = (now + timedelta(minutes=30)).strftime("%p %I시 %M분")
+        logger.info(f"mention_everyone, match will be start at {after30m}")
         msg = f"{ctx}\n내전이 **{after30m}**에 시작될 예정입니다\n참가자 모두 빠짐없이 확인해주세요!"
         mention_everyone_msg = await interaction.response.send_message(msg, embed=embed)
         mention_everyone_msg = await mention_everyone_msg.original_response()
