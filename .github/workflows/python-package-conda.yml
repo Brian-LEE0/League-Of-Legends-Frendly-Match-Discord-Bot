@@ -1,0 +1,25 @@
+name: Python Package using Conda
+
+on: 
+  push:
+    branches: [ svc ]
+  pull_request:
+    branches: [ svc ]
+
+jobs:
+  build-linux:
+    runs-on: self-hosted
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.10'
+    - name: run conda and install pip
+      run: |
+        conda activate discord-bot-svc
+        pip install -r src/requirements.txt
+    - name: run with conda
+      run: |
+        cd src
+        python main.py
