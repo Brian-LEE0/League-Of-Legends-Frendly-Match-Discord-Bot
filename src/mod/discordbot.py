@@ -3,6 +3,8 @@ import re
 from mod.logger import setup_logger
 from mod.crud.id import generate_uuid
 from mod.util.time import TIME as T
+from discord.commands import Option
+
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -16,11 +18,12 @@ regex_time = re.compile(r'^\d{1,2}$')
 
 
 class MatchInfo():
-    def __init__(self, creator, notion_id, max):
+    def __init__(self, creator, min_start_time, notion_id, max):
         self.creator = creator
         self.notion_id = notion_id
         self.mention_everyone_id = None
         self.players: set = set()
+        self.min_start_time = min_start_time
         self.max = max
 
     def __len__(self):
@@ -36,7 +39,7 @@ class MatchInfo():
         
         ctn = ctn.split("\n")
         self.players.add(user) # inc player
-        ctn[2] = f"현재인원 : {len(self)}/{self.max}"
+        ctn[-1] = f"현재인원 : {len(self)}/{self.max}"
         ctn = "\n".join(ctn)
         
         logger.info(f"{interaction.channel.mention} {interaction.user} 참가 신청")
@@ -48,9 +51,6 @@ class MatchInfo():
         return True
 
     async def remove_player(self, user, interaction):
-        if len(self) == self.max:
-            await interaction.response.send_message(f"이미 매치가 완료되었습니다. 매치 관리자에게 문의 해주세요!", ephemeral=True)
-            return False
         if not self.is_player_exist(user):
             await interaction.response.send_message(f"신청 내역이 없습니다.", ephemeral=True)
             return False
@@ -61,7 +61,7 @@ class MatchInfo():
         
         ctn = ctn.split("\n")
         self.players.remove(user) # dec player
-        ctn[2] = f"현재인원 : {len(self)}/{self.max}"
+        ctn[-1] = f"현재인원 : {len(self)}/{self.max}"
         ctn = "\n".join(ctn)
         
         logger.info(f"{interaction.channel.mention} {interaction.user} 참가 철회")
@@ -130,9 +130,12 @@ class MatchInfo():
     async def mention_everyone(self, interaction):
         embed = self.cur_player_embed()
         ctx = self.cur_player_mention()
-        after30m = T.now_time_after_m(30).strftime("%p %I시 %M분").replace("AM", "오전").replace("PM", "오후")
-        logger.info(f"mention_everyone, match will be start at {after30m}")
-        msg = f"{ctx}\n내전이 **{after30m}**에 시작될 예정입니다\n참가자 모두 빠짐없이 확인해주세요!"
+        after30m = T.now_time_after_m(30)
+        print(after30m)
+        print(self.min_start_time)
+        start_time = max(after30m,self.min_start_time).strftime("%p %I시 %M분").replace("AM", "오전").replace("PM", "오후")
+        logger.info(f"mention_everyone, match will be start at {start_time}")
+        msg = f"{ctx}\n내전이 **{start_time}**에 시작될 예정입니다\n참가자 모두 빠짐없이 확인해주세요!"
         mention_everyone_msg = await interaction.response.send_message(msg, embed=embed)
         mention_everyone_msg = await mention_everyone_msg.original_response()
         return mention_everyone_msg.id
@@ -242,20 +245,35 @@ class MatchJoinForm(discord.ui.Modal):
 
 ########################## BOT COMMANDS ##########################     
 
+hour_candidate=[]
+for i in range(1,25) :
+    hour_candidate.append(f"{i}".zfill(2))
+
+min_candidate=[]
+for i in range(0,60,10) :
+    min_candidate.append(f"{i}".zfill(2))
+
 @bot.slash_command(name="내전생성", description="ex) /내전생성 {@리그오브레전드} {10}")  # Create a slash command
-async def create_frendly_match(ctx, everyone: str, max: int = 10):
+async def create_frendly_match(
+    ctx, 
+    everyone: str,
+    istoday: Option(str, "오늘? 내일?", choices=["오늘", "내일"]),
+    hour: Option(int, "시", choices=hour_candidate),
+    minute: Option(int, "분", choices=min_candidate),
+    max: Option(int, "내전 최대 인원", default=10),
+    ):
     global Match
     key = generate_uuid()
-    if key in Match:
-        await ctx.response.send_message("이미 내전을 생성했습니다. \"/내전취소\"를 해주세요.", ephemeral=True)
-    else:
-        logger.info(f"{ctx.channel.name} {ctx.author.name} 내전 생성 완료")
-        notion_str = f"{everyone}\n{ctx.author.mention} 님이 내전을 생성하였습니다. 참가를 원하시는 분은 아래 버튼을 눌러주세요.\n현재인원 : 0/{max}"
-        notion_msg = await ctx.response.send_message(notion_str, view=MatchJoinView(key))
-        notion_msg = await notion_msg.original_response()
-        logger.info(f"generate notion msg : {notion_msg.id}")
-        Match[key] = MatchInfo(ctx.author, notion_msg.id, max)
-        logger.info(f"Match key : {key}")
+    logger.info(f"{ctx.channel.name} {ctx.author.name} 내전 생성 완료")
+    min_start_time = T.get_datetime(istoday,hour,minute)
+    str_time = min_start_time.strftime(f"{istoday} %p %I시 %M분").replace("AM", "오전").replace("PM", "오후")
+    notion_str = f"{everyone}\n{ctx.author.mention} 님이 내전을 생성하였습니다.\n내전이 **{str_time} 이후**에 시작 될 예정입니다.\n참가를 원하시는 분은 아래 **버튼**을 눌러주세요.\n현재인원 : 0/{max}"
+    notion_msg = await ctx.response.send_message(notion_str, view=MatchJoinView(key))
+    notion_msg = await notion_msg.original_response()
+    logger.info(f"generate notion msg : {notion_msg.id}")
+    Match[key] = MatchInfo(ctx.author, min_start_time, notion_msg.id, max)
+    logger.info(f"Match key : {key}")
+        
 
 
 # @bot.slash_command(name="내전정보", description = "ex) /내전정보") # Create a slash command
