@@ -1,11 +1,8 @@
 import discord
-from datetime import datetime, timedelta
-import pytz
 import re
 from mod.logger import setup_logger
 from mod.crud.id import generate_uuid
-
-KST = pytz.timezone('Asia/Seoul')
+from mod.util.time import TIME as T
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -133,8 +130,7 @@ class MatchInfo():
     async def mention_everyone(self, interaction):
         embed = self.cur_player_embed()
         ctx = self.cur_player_mention()
-        now = datetime.now(KST)
-        after30m = (now + timedelta(minutes=30)).strftime("%p %I시 %M분").replace("AM", "오전").replace("PM", "오후")
+        after30m = T.now_time_after_m(30).strftime("%p %I시 %M분").replace("AM", "오전").replace("PM", "오후")
         logger.info(f"mention_everyone, match will be start at {after30m}")
         msg = f"{ctx}\n내전이 **{after30m}**에 시작될 예정입니다\n참가자 모두 빠짐없이 확인해주세요!"
         mention_everyone_msg = await interaction.response.send_message(msg, embed=embed)

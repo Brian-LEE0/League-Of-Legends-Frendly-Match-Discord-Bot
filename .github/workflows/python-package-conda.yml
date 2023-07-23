@@ -18,11 +18,3 @@ jobs:
     - name: run conda and install pip
       run: |
         pip install -r src/requirements.txt
-    - name: run with conda
-      run: |
-        cd src
-        export SERVICE_STATE=svc
-        export BOT_TOKEN=${{ secrets.BOT_TOKEN }}
-        export RIOT_API_KEY=${{ secrets.RIOT_API_KEY }}
-        nohup python main.py &
-        jobs
