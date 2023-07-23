@@ -31,7 +31,7 @@ class MatchInfo():
 
     async def add_player(self, user, interaction):
         if self.is_player_exist(user):
-            await interaction.response.send_message(f"이미 내전을 신청한 유저입니다.", ephemeral=True)
+            await interaction.response.send_message(f"이미 내전을 신청한 유저입니다.", ephemeral=True, delete_after=3)
             return False
         ctn = await self._get_msg_ctx_from_id(self.notion_id)
         if ctn is None:
@@ -47,12 +47,12 @@ class MatchInfo():
         if len(self) == self.max: # call everyone
             self.mention_everyone_id = await self.mention_everyone(interaction)
         else: # success msg
-            await interaction.response.send_message(f"{interaction.user.mention} 님의 참가 신청이 완료 되었습니다.", ephemeral=True)
+            await interaction.response.send_message(f"{interaction.user.mention} 님의 참가 신청이 완료 되었습니다.", ephemeral=True, delete_after=3)
         return True
 
     async def remove_player(self, user, interaction):
         if not self.is_player_exist(user):
-            await interaction.response.send_message(f"신청 내역이 없습니다.", ephemeral=True)
+            await interaction.response.send_message(f"신청 내역이 없습니다.", ephemeral=True, delete_after=3)
             return False
         
         ctn = await self._get_msg_ctx_from_id(self.notion_id)
@@ -69,7 +69,7 @@ class MatchInfo():
         if self.mention_everyone_id:
             await self._edit_msg_from_id(self.mention_everyone_id, "", delete=True)
             self.mention_everyone_id = None
-        await interaction.response.send_message(f"{interaction.user.mention} 님의 참가 신청이 철회 되었습니다.", ephemeral=True)
+        await interaction.response.send_message(f"{interaction.user.mention} 님의 참가 신청이 철회 되었습니다.", ephemeral=True, delete_after=3)
         return True
 
     def is_player_exist(self, player):
@@ -131,8 +131,6 @@ class MatchInfo():
         embed = self.cur_player_embed()
         ctx = self.cur_player_mention()
         after30m = T.now_time_after_m(30)
-        print(after30m)
-        print(self.min_start_time)
         start_time = max(after30m,self.min_start_time).strftime("%p %I시 %M분").replace("AM", "오전").replace("PM", "오후")
         logger.info(f"mention_everyone, match will be start at {start_time}")
         msg = f"{ctx}\n내전이 **{start_time}**에 시작될 예정입니다\n참가자 모두 빠짐없이 확인해주세요!"
@@ -268,8 +266,8 @@ async def create_frendly_match(
     min_start_time = T.get_datetime(istoday,hour,minute)
     str_time = min_start_time.strftime(f"{istoday} %p %I시 %M분").replace("AM", "오전").replace("PM", "오후")
     notion_str = f"{everyone}\n{ctx.author.mention} 님이 내전을 생성하였습니다.\n내전이 **{str_time} 이후**에 시작 될 예정입니다.\n참가를 원하시는 분은 아래 **버튼**을 눌러주세요.\n현재인원 : 0/{max}"
-    notion_msg = await ctx.response.send_message(notion_str, view=MatchJoinView(key))
-    notion_msg = await notion_msg.original_response()
+    await ctx.response.send_message(f"{ctx.author.mention}님이 내전을 생성하였습니다.", ephemeral=True, delete_after=3)
+    notion_msg = await ctx.channel.send(notion_str, view=MatchJoinView(key))
     logger.info(f"generate notion msg : {notion_msg.id}")
     Match[key] = MatchInfo(ctx.author, min_start_time, notion_msg.id, max)
     logger.info(f"Match key : {key}")
