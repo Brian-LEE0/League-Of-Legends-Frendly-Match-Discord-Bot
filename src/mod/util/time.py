@@ -7,16 +7,18 @@ from datetime import datetime, timedelta, time
 class TIME() :
     
     @classmethod
-    def now_time():
+    def now_time(cls):
         now = datetime.now(KST)
         return now.replace(tzinfo=None)
     
-    def now_time_after_m(m : int):
+    @classmethod
+    def now_time_after_m(cls, m : int):
         now = datetime.now(KST)
         after = now + timedelta(minutes=m)
         return after.replace(tzinfo=None)
     
-    def get_datetime(istoday, hour, minute):
+    @classmethod
+    def get_datetime(cls, hour, minute):
         today = datetime.now(KST).date()
         
         # 시간과 분으로 datetime 객체 생성
@@ -24,7 +26,7 @@ class TIME() :
         # 오늘의 날짜와 시간을 합쳐서 datetime 객체 생성
         result_datetime = datetime.combine(today, specified_time)
         
-        if "오늘" != istoday:
+        if result_datetime < cls.now_time(): 
             result_datetime = result_datetime + timedelta(days=1)
             
         return result_datetime

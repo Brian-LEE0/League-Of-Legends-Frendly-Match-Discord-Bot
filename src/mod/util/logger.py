@@ -23,3 +23,5 @@ def setup_logger(log_file='LFM_bot.log', level=logging.DEBUG):
     logger.addHandler(console_handler)
 
     return logger
+
+logger = setup_logger()

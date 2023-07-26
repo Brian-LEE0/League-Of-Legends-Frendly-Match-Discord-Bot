@@ -1,276 +1,65 @@
 import discord
-import re
-from mod.logger import setup_logger
-from mod.crud.id import generate_uuid
-from mod.util.time import TIME as T
-from discord.commands import Option
-
-
+Match = dict()
 intents = discord.Intents.default()
 intents.message_content = True
-
 bot = discord.Bot(description="롤 내전을 위한 봇 입니다", intents=intents)  # Create a bot object
-logger = setup_logger()  # Setup the logger
-Match = dict()
-DL_NameMap = dict()  # Discord Mention - League Name Map ex) {<@!123456789> : "Hide on bush"}
 
-regex_time = re.compile(r'^\d{1,2}$')
+from mod.data.match import MatchInfo
 
+from mod.util.logger import logger
 
-class MatchInfo():
-    def __init__(self, creator, min_start_time, notion_id, max):
-        self.creator = creator
-        self.notion_id = notion_id
-        self.mention_everyone_id = None
-        self.players: set = set()
-        self.min_start_time = min_start_time
-        self.max = max
+from mod.util.uuid import generate_uuid
+from mod.util.time import TIME as T
 
-    def __len__(self):
-        return len(self.players)
-
-    async def add_player(self, user, interaction):
-        if self.is_player_exist(user):
-            await interaction.response.send_message(f"이미 내전을 신청한 유저입니다.", ephemeral=True, delete_after=3)
-            return False
-        ctn = await self._get_msg_ctx_from_id(self.notion_id)
-        if ctn is None:
-            return False
-        
-        ctn = ctn.split("\n")
-        self.players.add(user) # inc player
-        ctn[-1] = f"현재인원 : {len(self)}/{self.max}"
-        ctn = "\n".join(ctn)
-        
-        logger.info(f"{interaction.channel.mention} {interaction.user} 참가 신청")
-        await self._edit_msg_from_id(self.notion_id, ctn) # edit msg
-        if len(self) == self.max: # call everyone
-            self.mention_everyone_id = await self.mention_everyone(interaction)
-        else: # success msg
-            await interaction.response.send_message(f"{interaction.user.mention} 님의 참가 신청이 완료 되었습니다.", ephemeral=True, delete_after=3)
-        return True
-
-    async def remove_player(self, user, interaction):
-        if not self.is_player_exist(user):
-            await interaction.response.send_message(f"신청 내역이 없습니다.", ephemeral=True, delete_after=3)
-            return False
-        
-        ctn = await self._get_msg_ctx_from_id(self.notion_id)
-        if ctn is None:
-            return False
-        
-        ctn = ctn.split("\n")
-        self.players.remove(user) # dec player
-        ctn[-1] = f"현재인원 : {len(self)}/{self.max}"
-        ctn = "\n".join(ctn)
-        
-        logger.info(f"{interaction.channel.mention} {interaction.user} 참가 철회")
-        await self._edit_msg_from_id(self.notion_id, ctn) # edit msg
-        if self.mention_everyone_id:
-            await self._edit_msg_from_id(self.mention_everyone_id, "", delete=True)
-            self.mention_everyone_id = None
-        await interaction.response.send_message(f"{interaction.user.mention} 님의 참가 신청이 철회 되었습니다.", ephemeral=True, delete_after=3)
-        return True
-
-    def is_player_exist(self, player):
-        return player in self.players
-
-    def cur_player_league(self, separator=" "):
-        players = [DL_NameMap[p.mention] for p in self.players]
-        ctx = separator.join(players)
-        return ctx
-
-    def cur_player_mention(self, separator=" "):
-        players = [p.mention for p in self.players]
-        ctx = separator.join(players)
-        return ctx
-
-    @staticmethod
-    async def _edit_msg_from_id(mid, ctn, delete=False):
-        msg = bot.get_message(mid)
-        if msg is None:
-            logger.info(f"fail to edit msg : {mid}")
-            return False
-
-        if delete:
-            try:
-                await msg.delete()
-                logger.info(f"edit msg : {mid}")
-                return True
-            except:
-                return False
-        logger.info(f"edit msg : {mid}")
-        await msg.edit(content=ctn)
-        return True
-
-    @staticmethod
-    async def _get_msg_ctx_from_id(mid):
-        msg = bot.get_message(mid)
-        if msg is None:
-            logger.info(f"fail to get msg from : {mid}")
-            return None
-        logger.info(f"get msg from : {mid}")
-        return msg.content
-
-    def cur_player_embed(self):
-        embed = discord.Embed(
-            title="참가자들 전적 보러가기!!",
-            url="https://www.op.gg/multisearch/kr?summoners=" + self.cur_player_league(",").replace(" ", ""),
-            color=discord.Color.green()
-        )
-        uid = [p.display_name for p in self.players]
-        uid_str = "\n".join(uid)
-        lid_str = self.cur_player_league("\n")
-
-        embed.add_field(name="디스코드 닉네임", value=uid_str, inline=True)
-        embed.add_field(name="롤 닉네임", value=lid_str, inline=True)
-
-        return embed
-
-    async def mention_everyone(self, interaction):
-        embed = self.cur_player_embed()
-        ctx = self.cur_player_mention()
-        after30m = T.now_time_after_m(30)
-        start_time = max(after30m,self.min_start_time).strftime("%p %I시 %M분").replace("AM", "오전").replace("PM", "오후")
-        logger.info(f"mention_everyone, match will be start at {start_time}")
-        msg = f"{ctx}\n내전이 **{start_time}**에 시작될 예정입니다\n참가자 모두 빠짐없이 확인해주세요!"
-        mention_everyone_msg = await interaction.response.send_message(msg, embed=embed)
-        mention_everyone_msg = await mention_everyone_msg.original_response()
-        return mention_everyone_msg.id
-
-    async def del_message(self):
-        await self._edit_msg_from_id(self.mention_everyone_id, "", delete=True)
-        await self._edit_msg_from_id(self.notion_id, "", delete=True)
-
-class MatchJoinView(discord.ui.View):
-    def __init__(self, key, timeout=None):
-        super().__init__(timeout=timeout)
-        self.key = key
-
-    @discord.ui.button(label="참가 신청", style=discord.ButtonStyle.green)
-    async def join(self, button, interaction):
-        logger.info(f"push join button id : {button.custom_id} key : {self.key}")
-        match = Match[self.key]
-        if not match.is_player_exist(interaction.user):
-            await interaction.response.send_modal(MatchJoinForm(interaction.message, self.key, interaction.user))
-        else:
-            await interaction.response.send_message(f"이미 내전을 신청한 유저입니다.", ephemeral=True)
-
-    @discord.ui.button(label="참가 철회", style=discord.ButtonStyle.red)
-    async def unjoin(self, button, interaction):
-        logger.info(f"push unjoin button id : {button.custom_id} key : {self.key}")
-        match = Match[self.key]
-        await match.remove_player(interaction.user, interaction)
-
-    @discord.ui.button(label="내전 정보", style=discord.ButtonStyle.blurple)
-    async def match_info(self, button, interaction):
-        logger.info(f"push match_info button id : {button.custom_id} key : {self.key}")
-        match = Match[self.key]
-        embed = match.cur_player_embed()
-        msg = f"총 인원 : {len(match)}/{match.max}"
-        await interaction.response.send_message(msg, embed=embed,
-                                                ephemeral=True)  # Send a message with our View class that contains the button
-
-    @discord.ui.button(label="내전 취소", style=discord.ButtonStyle.gray, emoji="❌")
-    async def destroy(self, button, interaction):
-        logger.info(f"push destroy button id : {button.custom_id} key : {self.key}")
-        match = Match[self.key]
-        if match.creator.mention == interaction.user.mention:
-            await interaction.response.send_message(
-                f"{match.creator.mention}님이 만든 내전을 삭제했습니다.\n{match.cur_player_mention()}\n내전이 취소되었습니다.")  # Send a message with our View class that contains the button
-            Match.pop(self.key)
-            await match.del_message()
-        else:
-            await interaction.response.send_message(f"{interaction.user.mention}님이 생성한 매치가 아닙니다.", ephemeral=True)
-
-
-class MatchJoinForm(discord.ui.Modal):
-    def __init__(self, message, key, user):
-        super().__init__(title="참가 신청서")
-        self.user = user
-        self.key = key
-        self.message = message
-
-        self.league_name = discord.ui.InputText(
-            style=discord.InputTextStyle.singleline,
-            label="리그오브레전드 닉네임",
-            placeholder="ex) Hide on bush",
-            value=DL_NameMap.get(self.user.mention),
-            max_length=16,
-        )
-        self.add_item(self.league_name)
-
-        # self.hour = discord.ui.InputText(
-        #     style=discord.InputTextStyle.short,
-        #     label="시 (ex. 23) // 게임 시작 가능한 시간",
-        #     placeholder= str(now.hour).zfill(2),
-        #     value = str(now.hour).zfill(2),
-        #     max_length = 2,
-        #     )
-        # self.add_item(self.hour)
-
-        # self.minute = discord.ui.InputText(
-        #     style=discord.InputTextStyle.short,
-        #     label="분 (ex. 59)  // 게임 시작 가능한 시간",
-        #     placeholder = str(now.minute).zfill(2),
-        #     value = str(now.minute).zfill(2),
-        #     max_length = 2,
-        #     )
-        # self.add_item(self.minute)
-
-        self.suggestion = discord.ui.InputText(
-            style=discord.InputTextStyle.long,
-            label="기타 건의사항이 있으면 알려주세요",
-            required=False,
-            max_length=500,
-        )
-        self.add_item(self.suggestion)
-
-    async def callback(self, interaction):
-        # if() : # league name is exist
-        DL_NameMap[self.user.mention] = self.league_name.value
-        await Match[self.key].add_player(self.user, interaction)
-        if self.suggestion.value:
-            logger.info(f"Suggestion : {self.suggestion.value}")
-
-        # if regex_time.match(self.hour.value) and regex_time.match(self.minute.value) :
-        #     await Match[self.key].add_player(self.user, interaction)
-        #     if self.suggestion.value :
-        #         logger.info(f"Suggestion : {self.suggestion.value}")
-        # else :
-        #     await self.on_error(error=Exception("시간을 다시 입력해주세요"),interaction=interaction)
+from view.discord_view import *
 
 
 ########################## BOT COMMANDS ##########################     
 
 hour_candidate=[]
-for i in range(1,25) :
-    hour_candidate.append(f"{i}".zfill(2))
+for i in range(1,13) :
+    hour_candidate.append("오전 " + f"{i}".zfill(2) +"시")
+for i in range(1,13) :
+    hour_candidate.append("오후 " + f"{i}".zfill(2) +"시")
 
 min_candidate=[]
 for i in range(0,60,10) :
-    min_candidate.append(f"{i}".zfill(2))
+    min_candidate.append(f"{i}".zfill(2) + "분")
 
 @bot.slash_command(name="내전생성", description="ex) /내전생성 {@리그오브레전드} {10}")  # Create a slash command
 async def create_frendly_match(
     ctx, 
     everyone: str,
-    istoday: Option(str, "오늘? 내일?", choices=["오늘", "내일"]),
-    hour: Option(int, "시", choices=hour_candidate),
-    minute: Option(int, "분", choices=min_candidate),
-    max: Option(int, "내전 최대 인원", default=10),
+    hour: discord.commands.Option(str, "시", choices=hour_candidate),
+    minute: discord.commands.Option(str, "분", choices=min_candidate),
+    max: discord.commands.Option(int, "내전 최대 인원", default=10),
     ):
     global Match
+    # 12 to 24
+    hour = hour.replace("시","")
+    minute = int(minute.replace("분",""))
+    ampm = hour.split()[0]
+    hour12 = int(hour.split()[1])
+    hour24 = hour12 + 12 if ampm == "오후" else hour12
+    
+    # generate key
     key = generate_uuid()
-    logger.info(f"{ctx.channel.name} {ctx.author.name} 내전 생성 완료")
-    min_start_time = T.get_datetime(istoday,hour,minute)
-    str_time = min_start_time.strftime(f"{istoday} %p %I시 %M분").replace("AM", "오전").replace("PM", "오후")
+    print(hour24,minute)
+    
+    min_start_time = T.get_datetime(hour24,minute)
+    str_time = min_start_time.strftime(f"%p %I시 %M분").replace("AM", "오전").replace("PM", "오후")
     notion_str = f"{everyone}\n{ctx.author.mention} 님이 내전을 생성하였습니다.\n내전이 **{str_time} 이후**에 시작 될 예정입니다.\n참가를 원하시는 분은 아래 **버튼**을 눌러주세요.\n현재인원 : 0/{max}"
-    await ctx.response.send_message(f"{ctx.author.mention}님이 내전을 생성하였습니다.", ephemeral=True, delete_after=3)
+    
+    # send msg
+    _ = await ctx.response.send_message(f"{ctx.author.mention}님이 내전을 생성하였습니다.", ephemeral=True, delete_after=3)
     notion_msg = await ctx.channel.send(notion_str, view=MatchJoinView(key))
-    logger.info(f"generate notion msg : {notion_msg.id}")
+    
+    # make match class
     Match[key] = MatchInfo(ctx.author, min_start_time, notion_msg.id, max)
-    logger.info(f"Match key : {key}")
+    
+    # logging
+    logger.info(f"generate notion msg : {notion_msg.id}")
+    logger.info(f"Match key : {key} generator : {ctx.author.name} / min_start_time : {min_start_time} / max : {max} / channel : {ctx.channel.name}")
         
 
 

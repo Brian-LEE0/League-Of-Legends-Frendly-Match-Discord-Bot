@@ -14,6 +14,7 @@ mccabe==0.7.0
 multidict==6.0.4
 platformdirs==3.9.1
 prettytable==3.8.0
+psycopg2==2.9.6
 py-cord==2.4.1
 pylint==2.17.4
 python-dateutil==2.8.2

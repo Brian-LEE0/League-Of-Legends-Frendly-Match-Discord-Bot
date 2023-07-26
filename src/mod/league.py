@@ -1,15 +1,13 @@
 import requests
-from mod.logger import setup_logger
+from mod.util.logger import logger
 import os
 from dotenv import load_dotenv
 load_dotenv(f"../token_dev.env") # load all the variables from the env file
 import unittest
 # Riot Games API 키를 입력하세요.
 
-logger = setup_logger() # Setup the logger
-
 API_KEY = os.environ['RIOT_API_KEY']
-
+print("others2")
 def get_summoner_info_by_name(summoner_name):
     base_url = "https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/"
     headers = {
