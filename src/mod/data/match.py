@@ -76,6 +76,7 @@ class MatchInfo():
 
     def cur_player_mention(self, separator=" "):
         players = [p.mention for p in self.players]
+        
         ctx = separator.join(players)
         return ctx
 
