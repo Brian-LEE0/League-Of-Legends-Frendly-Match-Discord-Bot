@@ -3,6 +3,7 @@ from mod.discordbot import bot
 from mod.util.crud import *
 from mod.util.logger import logger
 from mod.util.time import TIME as T
+from view.discord_view import MentionEveryoneView
 
 class Match():
     def __init__(self) :
@@ -37,10 +38,9 @@ class MatchInfo():
         logger.info(f"{interaction.channel.mention} {interaction.user} 참가 신청")
         
         await self._edit_msg_from_id(self.notion_id, ctn) # edit msg
-        if len(self) == self.max: # call everyone
+        if len(self) >= self.max and not self.mention_everyone_id: # call everyone
             self.mention_everyone_id = await self.mention_everyone(interaction)
-        else: # success msg
-            await interaction.response.send_message(f"{interaction.user.mention} 님의 참가 신청이 완료 되었습니다.", ephemeral=True, delete_after=3)
+        await interaction.response.send_message(f"{interaction.user.mention} 님의 참가 신청이 완료 되었습니다.", ephemeral=True, delete_after=3)
         return True
 
     async def remove_player(self, user, interaction):
@@ -60,7 +60,7 @@ class MatchInfo():
         logger.info(f"{interaction.channel.mention} {interaction.user} 참가 철회")
         
         await self._edit_msg_from_id(self.notion_id, ctn) # edit msg
-        if self.mention_everyone_id:
+        if self.mention_everyone_id and len(self) < self.max:
             await self._edit_msg_from_id(self.mention_everyone_id, "", delete=True)
             self.mention_everyone_id = None
         await interaction.response.send_message(f"{interaction.user.mention} 님의 참가 신청이 철회 되었습니다.", ephemeral=True, delete_after=3)
@@ -130,7 +130,7 @@ class MatchInfo():
         start_time = max(after15m,self.min_start_time).strftime("%p %I시 %M분").replace("AM", "오전").replace("PM", "오후")
         logger.info(f"mention_everyone, match will be start at {start_time}")
         msg = f"{ctx}\n내전이 **{start_time}**에 시작될 예정입니다\n참가자 모두 빠짐없이 확인해주세요!"
-        mention_everyone_msg = await interaction.response.send_message(msg, embed=embed)
+        mention_everyone_msg = await interaction.response.send_message(msg, embed=embed, view = MentionEveryoneView(self.key))
         mention_everyone_msg = await mention_everyone_msg.original_response()
         return mention_everyone_msg.id
 
