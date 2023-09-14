@@ -3,7 +3,6 @@ from mod.discordbot import bot
 from mod.util.crud import *
 from mod.util.logger import logger
 from mod.util.time import TIME as T
-from view.discord_view import MentionEveryoneView
 
 class Match():
     def __init__(self) :
@@ -14,8 +13,9 @@ class MatchInfo():
         self.creator = creator
         self.notion_id = notion_id
         self.mention_everyone_id = None
-        self.players: set = set()
+        self.players: list = list()
         self.min_start_time = min_start_time
+        self.fixed_time = None
         self.max = max
 
     def __len__(self):
@@ -32,14 +32,14 @@ class MatchInfo():
         
         ctn = ctn.split("\n")
         self.players.add(user) # inc player
-        ctn[-1] = f"현재인원 : {len(self)}/{self.max}"
+        ctn[-1] = f"현재인원 : {len(self)}/{self.max}" if len(self) <= self.max else f"현재인원 : {self.max}/{self.max} 후보인원 : {len(self) - self.max}명"
         ctn = "\n".join(ctn)
         
         logger.info(f"{interaction.channel.mention} {interaction.user} 참가 신청")
         
         await self._edit_msg_from_id(self.notion_id, ctn) # edit msg
-        if len(self) >= self.max and not self.mention_everyone_id: # call everyone
-            self.mention_everyone_id = await self.mention_everyone(interaction)
+        if len(self) >= self.max : # call everyone
+            await self.mention_everyone(interaction)
         await interaction.response.send_message(f"{interaction.user.mention} 님의 참가 신청이 완료 되었습니다.", ephemeral=True, delete_after=3)
         return True
 
@@ -54,15 +54,16 @@ class MatchInfo():
         
         ctn = ctn.split("\n")
         self.players.remove(user) # dec player
-        ctn[-1] = f"현재인원 : {len(self)}/{self.max}"
+        ctn[-1] = f"현재인원 : {len(self)}/{self.max}" if len(self) <= self.max else f"현재인원 : {self.max}/{self.max} 후보인원 : {len(self) - self.max}명"
         ctn = "\n".join(ctn)
         
         logger.info(f"{interaction.channel.mention} {interaction.user} 참가 철회")
         
         await self._edit_msg_from_id(self.notion_id, ctn) # edit msg
-        if self.mention_everyone_id and len(self) < self.max:
+        if len(self) < self.max:
             await self._edit_msg_from_id(self.mention_everyone_id, "", delete=True)
             self.mention_everyone_id = None
+            self.fixed_time = None
         await interaction.response.send_message(f"{interaction.user.mention} 님의 참가 신청이 철회 되었습니다.", ephemeral=True, delete_after=3)
         return True
 
@@ -81,7 +82,7 @@ class MatchInfo():
         return ctx
 
     @staticmethod
-    async def _edit_msg_from_id(mid, ctn, delete=False):
+    async def _edit_msg_from_id(mid, ctn, embed = None, delete=False):
         msg = bot.get_message(mid)
         if msg is None:
             logger.info(f"fail to edit msg : {mid}")
@@ -95,7 +96,10 @@ class MatchInfo():
             except:
                 return False
         logger.info(f"edit msg : {mid}")
-        await msg.edit(content=ctn)
+        if embed is None :
+            await msg.edit(content=ctn)
+        else :
+            await msg.edit(content=ctn, embed=embed)
         return True
 
     @staticmethod
@@ -117,10 +121,11 @@ class MatchInfo():
         uid_str = "\n".join(uid)
         lid_str = self.cur_player_league("\n")
         embed.add_field(name="**내전 DB**", value="[**Link!**](https://docs.google.com/spreadsheets/d/1lSOKjcKNu0lI7EP87KEW2gYEBW4Y7HW8_KawxNuu1L0/edit?usp=sharing)", inline=False)
-        embed.add_field(name="**디스코드 닉네임**", value=uid_str, inline=True)
-        embed.add_field(name="**롤 닉네임**", value=lid_str, inline=True)
-        
-
+        embed.add_field(name="**디스코드 닉네임**", value=uid_str[:9 if len(self) > self.max else len(self) - 1], inline=True)
+        embed.add_field(name="**롤 닉네임**", value=lid_str[:9 if len(self) > self.max else len(self) - 1], inline=True)
+        if len(self) > self.max:
+            embed.add_field(name="**후보 디코 닉네임**", value=uid_str[10:], inline=False)
+            embed.add_field(name="**후보 롤 닉네임**", value=lid_str[10:], inline=True)
         return embed
 
     async def mention_everyone(self, interaction):
@@ -128,11 +133,14 @@ class MatchInfo():
         ctx = self.cur_player_mention()
         after15m = T.now_time_after_m(15)
         start_time = max(after15m,self.min_start_time).strftime("%p %I시 %M분").replace("AM", "오전").replace("PM", "오후")
-        logger.info(f"mention_everyone, match will be start at {start_time}")
+        if self.fixed_time is None:
+            self.fixed_time = start_time
+        logger.info(f"mention_everyone, match will be start at {self.fixed_time}")
         msg = f"{ctx}\n내전이 **{start_time}**에 시작될 예정입니다\n참가자 모두 빠짐없이 확인해주세요!"
-        mention_everyone_msg = await interaction.response.send_message(msg, embed=embed, view = MentionEveryoneView(self.key))
-        mention_everyone_msg = await mention_everyone_msg.original_response()
-        return mention_everyone_msg.id
+        if self.mention_everyone_id is not None:
+            return await self._edit_msg_from_id(self.mention_everyone_id, msg, embed = embed)
+        mention_everyone_msg = await interaction.response.send_message(msg, embed=embed)
+        self.mention_everyone_id = await mention_everyone_msg.original_response().id
 
     async def del_message(self):
         await self._edit_msg_from_id(self.mention_everyone_id, "", delete=True)
