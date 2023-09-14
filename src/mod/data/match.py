@@ -60,7 +60,9 @@ class MatchInfo():
         logger.info(f"{interaction.channel.mention} {interaction.user} 참가 철회")
         
         await self._edit_msg_from_id(self.notion_id, ctn) # edit msg
-        if len(self) < self.max:
+        if len(self) >= self.max : # call everyone
+            return await self.mention_everyone(interaction)
+        if len(self) < self.max and self.mention_everyone_id is not None:
             await self._edit_msg_from_id(self.mention_everyone_id, "", delete=True)
             self.mention_everyone_id = None
             self.fixed_time = None
@@ -125,7 +127,7 @@ class MatchInfo():
         embed.add_field(name = "",value= "", inline=False)
         if len(self) > self.max:
             embed.add_field(name="**후보 디코 닉네임**", value="\n".join(uid[self.max:]), inline=True)
-            embed.add_field(name="**후보 롤 닉네임**", value="\n".join(uid[self.max:]), inline=True)
+            embed.add_field(name="**후보 롤 닉네임**", value="\n".join(lid[self.max:]), inline=True)
         return embed
 
     async def mention_everyone(self, interaction):
