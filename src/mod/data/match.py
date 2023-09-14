@@ -39,7 +39,7 @@ class MatchInfo():
         
         await self._edit_msg_from_id(self.notion_id, ctn) # edit msg
         if len(self) >= self.max : # call everyone
-            return await self.mention_everyone(interaction)
+            await self.mention_everyone(interaction)
         await interaction.response.send_message(f"{interaction.user.mention} 님의 참가 신청이 완료 되었습니다.", ephemeral=True, delete_after=3)
         return True
 
@@ -61,7 +61,7 @@ class MatchInfo():
         
         await self._edit_msg_from_id(self.notion_id, ctn) # edit msg
         if len(self) >= self.max : # call everyone
-            return await self.mention_everyone(interaction)
+            await self.mention_everyone(interaction)
         if len(self) < self.max and self.mention_everyone_id is not None:
             await self._edit_msg_from_id(self.mention_everyone_id, "", delete=True)
             self.mention_everyone_id = None
@@ -141,7 +141,7 @@ class MatchInfo():
         msg = f"{ctx}\n내전이 **{start_time}**에 시작될 예정입니다\n참가자 모두 빠짐없이 확인해주세요!"
         if self.mention_everyone_id is not None:
             return await self._edit_msg_from_id(self.mention_everyone_id, msg, embed = embed)
-        mention_everyone_msg = await interaction.response.send_message(msg, embed=embed)
+        mention_everyone_msg = await interaction.channel.send(msg, embed=embed)
         self.mention_everyone_id = (await mention_everyone_msg.original_response()).id
 
     async def del_message(self):
