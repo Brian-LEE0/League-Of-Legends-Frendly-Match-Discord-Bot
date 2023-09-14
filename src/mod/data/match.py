@@ -31,7 +31,7 @@ class MatchInfo():
             return False
         
         ctn = ctn.split("\n")
-        self.players.add(user) # inc player
+        self.players.append(user) # inc player
         ctn[-1] = f"현재인원 : {len(self)}/{self.max}" if len(self) <= self.max else f"현재인원 : {self.max}/{self.max} 후보인원 : {len(self) - self.max}명"
         ctn = "\n".join(ctn)
         
