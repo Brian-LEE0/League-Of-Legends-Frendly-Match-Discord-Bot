@@ -118,14 +118,14 @@ class MatchInfo():
             color=discord.Color.green()
         )
         uid = [p.display_name for p in self.players]
-        uid_str = "\n".join(uid)
-        lid_str = self.cur_player_league("\n")
+        lid = [get_league_from_discord_id(did.mention) for did in self.players]
         embed.add_field(name="**내전 DB**", value="[**Link!**](https://docs.google.com/spreadsheets/d/1lSOKjcKNu0lI7EP87KEW2gYEBW4Y7HW8_KawxNuu1L0/edit?usp=sharing)", inline=False)
-        embed.add_field(name="**디스코드 닉네임**", value=uid_str[:self.max - 1 if len(self) > self.max else len(self) - 1], inline=True)
-        embed.add_field(name="**롤 닉네임**", value=lid_str[:self.max - 1 if len(self) > self.max else len(self) - 1], inline=True)
+        embed.add_field(name="**디스코드 닉네임**", value="\n".join(uid[:self.max - 1 if len(self) > self.max else len(self) - 1]), inline=True)
+        embed.add_field(name="**롤 닉네임**", value="\n".join(lid[:self.max - 1 if len(self) > self.max else len(self) - 1]), inline=True)
+        embed.add_field(inline=False)
         if len(self) > self.max:
-            embed.add_field(name="**후보 디코 닉네임**", value=uid_str[self.max:], inline=False)
-            embed.add_field(name="**후보 롤 닉네임**", value=lid_str[self.max:], inline=True)
+            embed.add_field(name="**후보 디코 닉네임**", value="\n".join(uid[self.max:]), inline=True)
+            embed.add_field(name="**후보 롤 닉네임**", value="\n".join(uid[self.max:]), inline=True)
         return embed
 
     async def mention_everyone(self, interaction):
