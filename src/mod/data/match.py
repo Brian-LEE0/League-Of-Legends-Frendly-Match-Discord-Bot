@@ -142,7 +142,7 @@ class MatchInfo():
         if self.mention_everyone_id is not None:
             return await self._edit_msg_from_id(self.mention_everyone_id, msg, embed = embed)
         mention_everyone_msg = await interaction.channel.send(msg, embed=embed)
-        self.mention_everyone_id = (await mention_everyone_msg.original_response()).id
+        self.mention_everyone_id = mention_everyone_msg.id
 
     async def del_message(self):
         await self._edit_msg_from_id(self.mention_everyone_id, "", delete=True)
