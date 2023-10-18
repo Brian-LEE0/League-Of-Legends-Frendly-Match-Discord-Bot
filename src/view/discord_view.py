@@ -1,6 +1,7 @@
 import discord
 
 from mod.discordbot import Match
+from mod.opgg import OPGG
 
 from mod.util.logger import logger
 from mod.util.crud import *
@@ -82,12 +83,18 @@ class MatchJoinForm(discord.ui.Modal):
         self.add_item(self.suggestion)
         
     async def callback(self, interaction):
-        # if() : # league name is exist
-        if self.org_league != self.league_name.value :
-            set_discord_id_to_league(self.user.mention, self.league_name.value)
-        await Match[self.key].add_player(self.user, interaction)
-        if self.suggestion.value:
-            logger.info(f"Suggestion : {self.suggestion.value}")
+        try :
+            # if() : # league name is exist
+            league_info = OPGG.get_info(self.league_name.value)
+            set_league_to_league_info(self.league_name.value, league_info)
+            if self.org_league != self.league_name.value :
+                set_discord_id_to_league(self.user.mention, self.league_name.value)
+            
+            await Match[self.key].add_player(self.user, interaction)
+            if self.suggestion.value:
+                logger.info(f"Suggestion : {self.suggestion.value}")
+        except Exception as e:
+            await self.on_error(error=Exception(e),interaction=interaction)
 
         # if regex_time.match(self.hour.value) and regex_time.match(self.minute.value) :
         #     await Match[self.key].add_player(self.user, interaction)
@@ -96,61 +103,3 @@ class MatchJoinForm(discord.ui.Modal):
         # else :
         #     await self.on_error(error=Exception("시간을 다시 입력해주세요"),interaction=interaction)
         
-        
-class MatchJoinForm(discord.ui.Modal):
-    def __init__(self, message, key, user):
-        super().__init__(title="참가 신청서")
-        self.user = user
-        self.key = key
-        self.message = message
-        self.org_league = get_league_from_discord_id(self.user.mention)
-
-        self.league_name = discord.ui.InputText(
-            style=discord.InputTextStyle.singleline,
-            label="리그오브레전드 닉네임",
-            placeholder="ex) Hide on bush",
-            value=self.org_league,
-            max_length=16,
-        )
-        self.add_item(self.league_name)
-
-        # self.hour = discord.ui.InputText(
-        #     style=discord.InputTextStyle.short,
-        #     label="시 (ex. 23) // 게임 시작 가능한 시간",
-        #     placeholder= str(now.hour).zfill(2),
-        #     value = str(now.hour).zfill(2),
-        #     max_length = 2,
-        #     )
-        # self.add_item(self.hour)
-
-        # self.minute = discord.ui.InputText(
-        #     style=discord.InputTextStyle.short,
-        #     label="분 (ex. 59)  // 게임 시작 가능한 시간",
-        #     placeholder = str(now.minute).zfill(2),
-        #     value = str(now.minute).zfill(2),
-        #     max_length = 2,
-        #     )
-        # self.add_item(self.minute)
-
-        self.suggestion = discord.ui.InputText(
-            style=discord.InputTextStyle.long,
-            label="기타 건의사항이 있으면 알려주세요",
-            required=False,
-            max_length=500,
-        )
-        self.add_item(self.suggestion)
-        
-    async def callback(self, interaction):
-        # if() : # league name is exist
-        if self.org_league != self.league_name.value :
-            set_discord_id_to_league(self.user.mention, self.league_name.value)
-        await Match[self.key].add_player(self.user, interaction)
-        if self.suggestion.value:
-            logger.info(f"Suggestion : {self.suggestion.value}")
-
-        # if regex_time.match(self.hour.value) and regex_time.match(self.minute.value) :
-        #     await Match[self.key].add_player(self.user, interaction)
-        #     if self.suggestion.value :
-        #         logger.info(f"Suggestion : {self.suggestion.value}")
-        # else :
-        #     await self.on_error(error=Exception("시간을 다시 입력해주세요"),interaction=interaction)
