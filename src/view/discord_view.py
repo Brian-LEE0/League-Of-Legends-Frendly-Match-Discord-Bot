@@ -67,8 +67,8 @@ class MatchJoinForm(discord.ui.Modal):
 
         self.league_name = discord.ui.InputText(
             style=discord.InputTextStyle.singleline,
-            label="시간변경",
-            placeholder="ex)오후 10시 30분",
+            label="리그 오브 레전드 닉네임",
+            placeholder="Hide on bush",
             value=self.org_league,
             max_length=16,
         )
@@ -85,7 +85,7 @@ class MatchJoinForm(discord.ui.Modal):
     async def callback(self, interaction):
         try :
             # if() : # league name is exist
-            league_info = await OPGG.get_info(self.league_name.value)
+            league_info = await OPGG.get_info(league_name=self.league_name.value)
             set_league_to_league_info(self.league_name.value, league_info)
             if self.org_league != self.league_name.value :
                 set_discord_id_to_league(self.user.mention, self.league_name.value)
@@ -95,7 +95,7 @@ class MatchJoinForm(discord.ui.Modal):
                 logger.info(f"Suggestion : {self.suggestion.value}")
         except Exception as e:
             logger.error(e)
-            await self.on_error(error=Exception(e),interaction=interaction)
+            await self.on_error(error=e,interaction=interaction)
 
         # if regex_time.match(self.hour.value) and regex_time.match(self.minute.value) :
         #     await Match[self.key].add_player(self.user, interaction)

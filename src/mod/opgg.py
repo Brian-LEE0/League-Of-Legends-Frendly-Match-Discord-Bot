@@ -1,4 +1,4 @@
-from logging import Logger
+from mod.util.logger import logger
 import aiohttp
 from bs4 import BeautifulSoup
 
@@ -41,16 +41,14 @@ class OPGG:
                                                  ],
                                   champ_list))
             champ_list = champ_list[:(3 if len(champ_list) > 3 else len(champ_list))]
-            while(len(champ_list) < 3):
-                champ_list.append(["","",""])
-            return champ_list[:(3 if len(champ_list) > 3 else len(champ_list))]
+            return champ_list
         except Exception as e:
-            print(e)
-            return [["","",""]]*3
+            logger.info(e)
+            return []
         
     @staticmethod
-    async def get_info(timeout = 2.0, 
-                        league_name = "고라니를삼킨토끼", 
+    async def get_info(league_name = "고라니를삼킨토끼",
+                        timeout = 2.0, 
                         retry_cnt = 0):
         if retry_cnt >= 5:
             return None
@@ -62,5 +60,7 @@ class OPGG:
                 if tier is None :
                     raise Exception("존재하지 않는 아이디")
                 cl = OPGG._get_champ_list(soup)
+                logger.info({"cur_tier" : tier,
+                        "most_3" : cl})
                 return {"cur_tier" : tier,
                         "most_3" : cl}

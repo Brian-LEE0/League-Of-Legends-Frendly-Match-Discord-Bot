@@ -122,31 +122,28 @@ class MatchInfo():
         did_list = [p.display_name for p in self.players]
         lid_list = [get_league_from_discord_id(did.mention) for did in self.players]
         linfo_list = [get_league_info_from_league(lid) for lid in lid_list]
-        linfo_tier = []
-        linfo_most_1 = []
-        linfo_most_2 = []
-        linfo_most_3 = []
+        linfo_tier_most = []
+        idx = 0
         for linfo in linfo_list:
-            linfo_tier.append(linfo["cur_tier"])
-            linfo_most_1.append(f"{linfo['most_3'][0][0]}({linfo['most_3'][0][1]}, {linfo['most_3'][0][2]})" if linfo['most_3'][0][0] != "" else "")
-            linfo_most_2.append(f"{linfo['most_3'][1][0]}({linfo['most_3'][1][1]}, {linfo['most_3'][1][2]})" if linfo['most_3'][1][0] != "" else "")
-            linfo_most_3.append(f"{linfo['most_3'][2][0]}({linfo['most_3'][2][1]}, {linfo['most_3'][2][2]})" if linfo['most_3'][2][0] != "" else "")
+            info_str = "**" + linfo["cur_tier"] + "**"
+            for most in linfo['most_3']:
+                info_str += "\n" + f"{most[0]}({most[1]}, {most[2]})"
+                did_list[idx] += "\n"
+                lid_list[idx] += "\n"
+                
+            linfo_tier_most.append(info_str)
+        
+        max_boundary = self.max if len(did_list) > self.max else len(did_list)
         
         embed.add_field(name="**내전 DB**", value="[**Link!**](https://docs.google.com/spreadsheets/d/1lSOKjcKNu0lI7EP87KEW2gYEBW4Y7HW8_KawxNuu1L0/edit?usp=sharing)", inline=False)
-        embed.add_field(name="**디스코드 닉네임**", value="\n".join(did_list[:self.max if len(self) > self.max else len(self)]), inline=True)
-        embed.add_field(name="**롤 닉네임**", value="\n".join(lid_list[:self.max if len(self) > self.max else len(self)]), inline=True)
-        embed.add_field(name="**솔랭티어**", value="\n".join(linfo_most_1[:self.max if len(self) > self.max else len(self)]), inline=True)
-        embed.add_field(name="**모스트1(KDA, 승률)**", value="\n".join(linfo_most_1[:self.max if len(self) > self.max else len(self)]), inline=True)
-        embed.add_field(name="**모스트2(KDA, 승률)**", value="\n".join(linfo_most_2[:self.max if len(self) > self.max else len(self)]), inline=True)
-        embed.add_field(name="**모스트3(KDA, 승률)**", value="\n".join(linfo_most_3[:self.max if len(self) > self.max else len(self)]), inline=True)
+        embed.add_field(name="**디코닉**", value="\n".join(did_list[:max_boundary]), inline=True)
+        embed.add_field(name="**롤닉**", value="\n".join(lid_list[:max_boundary]), inline=True)
+        embed.add_field(name="**티어&모스트**", value="\n".join(linfo_tier_most[:max_boundary]), inline=True)
         embed.add_field(name = "",value= "", inline=False)
         if len(self) > self.max:
-            embed.add_field(name="**후보 디코 닉네임**", value="\n".join(did_list[self.max:]), inline=True)
-            embed.add_field(name="**후보 롤 닉네임**", value="\n".join(lid_list[self.max:]), inline=True)
-            embed.add_field(name="**솔랭티어**", value="\n".join(linfo_most_1[self.max:]), inline=True)
-            embed.add_field(name="**모스트1(KDA, 승률)**", value="\n".join(linfo_most_1[self.max:]), inline=True)
-            embed.add_field(name="**모스트2(KDA, 승률)**", value="\n".join(linfo_most_2[self.max:]), inline=True)
-            embed.add_field(name="**모스트3(KDA, 승률)**", value="\n".join(linfo_most_3[self.max:]), inline=True)
+            embed.add_field(name="**후보 디코닉**", value="\n".join(did_list[max_boundary:]), inline=True)
+            embed.add_field(name="**후보 롤닉**", value="\n".join(lid_list[max_boundary:]), inline=True)
+            embed.add_field(name="**후보 티어&모스트**", value="\n".join(linfo_tier_most[max_boundary:]), inline=True)
         return embed
 
     async def mention_everyone(self, interaction):

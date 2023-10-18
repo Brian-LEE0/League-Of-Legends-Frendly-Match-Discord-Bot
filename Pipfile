@@ -10,6 +10,7 @@ requests = "==2.31.0"
 psycopg2 = "==2.9.6"
 pytz = "*"
 bs4 = "*"
+load-dotenv = "*"
 
 [dev-packages]
 

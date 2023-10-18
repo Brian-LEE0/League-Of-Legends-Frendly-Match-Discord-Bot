@@ -36,7 +36,7 @@ def save_str_to_redis(key, str, expire = 0):
     :param key: Redis에 저장할 데이터의 키
     :param data: Redis에 저장할 데이터
     """
-    logger.info(f"save_json_to_redis {key} {str}")
+    logger.info(f"save_str_to_redis {key} {str}")
     redis_client.set(key, str)
     if expire :
         redis_client.expire(key, expire)
