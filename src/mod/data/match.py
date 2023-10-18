@@ -130,6 +130,7 @@ class MatchInfo():
                 info_str += "\n" + f"{most[0]}({most[1]}, {most[2]})"
                 did_list[idx] += "\n"
                 lid_list[idx] += "\n"
+            idx += 1
                 
             linfo_tier_most.append(info_str)
         
