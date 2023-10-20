@@ -125,9 +125,9 @@ class MatchInfo():
         linfo_list = [get_league_info_from_league(lid) for lid in lid_list]
         linfo_tier_most = []
         for linfo in linfo_list:
-            info_str = TIER_TO_DISCORD.get(linfo["cur_tier"])
+            info_str = TIER_TO_DISCORD.get(linfo["cur_tier"],linfo["cur_tier"])
             for most in linfo['most_3']:
-                info_str += CHAMP_TO_DISCORD.get(most[0])
+                info_str += CHAMP_TO_DISCORD.get(most[0],most[0])
                 
             linfo_tier_most.append(info_str)
         
