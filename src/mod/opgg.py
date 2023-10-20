@@ -23,7 +23,7 @@ class OPGG:
                     tier = prev_tier[1]
                 return tier
             rank_solo_tier = rank_solo_tier.text
-            return rank_solo_tier[0]
+            return rank_solo_tier.split()[0]
         except:
             return None
 
