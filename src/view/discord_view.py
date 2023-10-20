@@ -33,7 +33,7 @@ class MatchJoinView(discord.ui.View):
         embed = match.cur_player_embed()
         msg = f"총 인원 : {len(match)}/{match.max}"
         await interaction.response.send_message(msg, embed=embed,
-                                                ephemeral=True)  # Send a message with our View class that contains the button
+                                                ephemeral=True, delete_after=20)  # Send a message with our View class that contains the button
 
     @discord.ui.button(label="내전 취소", style=discord.ButtonStyle.gray, emoji="❌")
     async def destroy(self, button, interaction):
@@ -45,7 +45,7 @@ class MatchJoinView(discord.ui.View):
             Match.pop(self.key)
             await match.del_message()
         else:
-            await interaction.response.send_message(f"{interaction.user.mention}님이 생성한 매치가 아닙니다.", ephemeral=True)
+            await interaction.response.send_message(f"{interaction.user.mention}님이 생성한 매치가 아닙니다.", ephemeral=True, delete_after=3)
 
 class MentionEveryoneView(discord.ui.View):
     def __init__(self, key, timeout=None):

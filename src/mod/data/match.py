@@ -4,7 +4,7 @@ from mod.util.crud import *
 from mod.util.logger import logger
 from mod.util.time import TIME as T
 from mod.data.league_image import *
-
+    
 class Match():
     def __init__(self) :
         self.d
@@ -120,28 +120,55 @@ class MatchInfo():
             url="https://www.op.gg/multisearch/kr?summoners=" + self.cur_player_league(",").replace(" ", ""),
             color=discord.Color.green()
         )
-        did_list = [p.display_name for p in self.players]
-        lid_list = [get_league_from_discord_id(did.mention) for did in self.players]
-        linfo_list = [get_league_info_from_league(lid) for lid in lid_list]
-        linfo_tier_most = []
-        for linfo in linfo_list:
-            info_str = TIER_TO_DISCORD.get(linfo["cur_tier"],linfo["cur_tier"])
-            for most in linfo['most_3']:
-                info_str += CHAMP_TO_DISCORD.get(most[0],most[0])
-                
-            linfo_tier_most.append(info_str)
         
-        max_boundary = self.max if len(did_list) > self.max else len(did_list)
+        player_info_list = []
+        for p in self.players[:self.max] :
+            did = p.mention
+            lid = get_league_from_discord_id(did)
+            linfo = get_league_info_from_league(lid)
+            priority = {
+                "unranked" : 0,
+                "iron" : 1,
+                "silver" : 2,
+                "gold" : 3,
+                "platinum" : 4,
+                "emerald" : 5,
+                "diamond" : 6,
+                "master" : 7,
+                "grandmaster" : 8,
+                "challenger" : 9,
+            }.get(linfo["cur_tier"],0)
+
+            cur_tier_and_most_3 =  TIER_TO_DISCORD.get(linfo["cur_tier"],linfo["cur_tier"])+" "
+            cur_tier_and_most_3 += "".join([CHAMP_TO_DISCORD.get(most[0],most[0]) for most in linfo['most_3']])
+            player_info_list.append({
+                "did" : did,
+                "lid" : lid,
+                "linfo" : linfo,
+                "cur_tier_and_most_3" : cur_tier_and_most_3,
+                "priority" : priority
+            })
+            
+            player_info_list.sort(
+                key=lambda x : x["priority"],
+                reverse=True
+            )
+        
+        middle_boundary = 5 if len(player_info_list) > 5 else len(player_info_list)
+        max_boundary = self.max if len(player_info_list) > self.max else len(player_info_list)
         
         embed.add_field(name="**내전 DB**", value="[**Link!**](https://docs.google.com/spreadsheets/d/1lSOKjcKNu0lI7EP87KEW2gYEBW4Y7HW8_KawxNuu1L0/edit?usp=sharing)", inline=False)
-        embed.add_field(name="**디코닉**", value="\n".join(did_list[:max_boundary]), inline=True)
-        embed.add_field(name="**롤닉**", value="\n".join(lid_list[:max_boundary]), inline=True)
-        embed.add_field(name="**티어&모스트**", value="\n".join(linfo_tier_most[:max_boundary]), inline=True)
-        embed.add_field(name = "",value= "", inline=False)
-        if len(self) > self.max:
-            embed.add_field(name="**후보 디코닉**", value="\n".join(did_list[max_boundary:]), inline=True)
-            embed.add_field(name="**후보 롤닉**", value="\n".join(lid_list[max_boundary:]), inline=True)
-            embed.add_field(name="**후보 티어&모스트**", value="\n".join(linfo_tier_most[max_boundary:]), inline=True)
+        embed.add_field(name="**디코닉**", value="\n".join([p["did"] for p in player_info_list[:middle_boundary]]), inline=True)
+        embed.add_field(name="**롤닉**", value="\n".join([p["lid"] for p in player_info_list[:middle_boundary]]), inline=True)
+        embed.add_field(name="**티어&모스트**", value="\n".join([p["cur_tier_and_most_3"] for p in player_info_list[:middle_boundary]]), inline=True)
+        
+        if len(self) > 5 :
+            embed.add_field(name = "",value= "", inline=False)
+            embed.add_field(name="", value="\n".join([p["did"] for p in player_info_list[middle_boundary:max_boundary]]), inline=True)
+            embed.add_field(name="", value="\n".join([p["lid"] for p in player_info_list[middle_boundary:max_boundary]]), inline=True)
+            embed.add_field(name="", value="\n".join([p["cur_tier_and_most_3"] for p in player_info_list[middle_boundary:max_boundary]]), inline=True)
+        if len(self) > self.max :
+            embed.add_field(name="후보선수", value=", ".join([p.mention for p in self.players[self.max:]]), inline=True)
         return embed
 
     async def mention_everyone(self, interaction):

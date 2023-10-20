@@ -1,6 +1,7 @@
 from mod.util.logger import logger
 import aiohttp
 from bs4 import BeautifulSoup
+import re
 
 class OPGG:
     @staticmethod
@@ -31,7 +32,7 @@ class OPGG:
     def _get_champ_list(soup):
         try :
             champ_list = soup.find("div","css-yqoz96 enfvmur0").find_all("div","champion-box")
-            champ_list = list(map(lambda champ : [champ.find("div","name").text, 
+            champ_list = list(map(lambda champ : [re.sub("[^a-z]","",champ.find("div","name").text.lower()), 
                                                   champ.find("div","kda").find("div").find("div").text.split(":")[0],
                                                   champ.find("div","played").find("div").find("div").text
                                                  ],
