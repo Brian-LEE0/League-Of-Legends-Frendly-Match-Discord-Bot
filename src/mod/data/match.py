@@ -3,6 +3,7 @@ from mod.discordbot import bot
 from mod.util.crud import *
 from mod.util.logger import logger
 from mod.util.time import TIME as T
+from mod.data.league_image import *
 
 class Match():
     def __init__(self) :
@@ -123,14 +124,10 @@ class MatchInfo():
         lid_list = [get_league_from_discord_id(did.mention) for did in self.players]
         linfo_list = [get_league_info_from_league(lid) for lid in lid_list]
         linfo_tier_most = []
-        idx = 0
         for linfo in linfo_list:
-            info_str = "**" + linfo["cur_tier"] + "**"
+            info_str = TIER_TO_DISCORD.get(linfo["cur_tier"])
             for most in linfo['most_3']:
-                info_str += "\n" + f"{most[0]}({most[1]}, {most[2]})"
-                did_list[idx] += "\n"
-                lid_list[idx] += "\n"
-            idx += 1
+                info_str += CHAMP_TO_DISCORD.get(most[0])
                 
             linfo_tier_most.append(info_str)
         

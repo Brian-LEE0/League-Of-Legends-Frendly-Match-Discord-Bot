@@ -10,24 +10,20 @@ class OPGG:
             if rank_solo_tier is None :
                 prev_tier = soup.find("ul", "tier-list").find("li")
                 if prev_tier is None :
-                    return "UNRANK"
+                    return "Unranked"
                 prev_tier = prev_tier.text.split()
                 if len(prev_tier) == 4 :
-                    tier = f"{prev_tier[2][0].upper()}{prev_tier[3]}"
-                    season = f"{prev_tier[0]} {prev_tier[1]}"
+                    tier = prev_tier[2]
                 elif len(prev_tier) == 3:
                     if prev_tier[-1].isnumeric():
-                        tier = f"{prev_tier[1][0].upper()}{prev_tier[2]}"
-                        season = f"{prev_tier[0]}"
+                        tier = prev_tier[1]
                     else:
-                        tier = f"{prev_tier[2][0].upper()}"
-                        season = f"{prev_tier[0]} {prev_tier[1]}"
+                        tier = prev_tier[2]
                 else:
-                    tier = f"{prev_tier[1][0].upper()}"
-                    season = f"{prev_tier[0]}"
-                return f"{tier}({season})"
+                    tier = prev_tier[1]
+                return tier
             rank_solo_tier = rank_solo_tier.text
-            return rank_solo_tier[0].upper()+rank_solo_tier[-1]
+            return rank_solo_tier[0]
         except:
             return None
 
@@ -52,7 +48,7 @@ class OPGG:
                         retry_cnt = 0):
         if retry_cnt >= 5:
             return None
-        async with aiohttp.ClientSession(cookies = {"_ol":"ko_KR"},
+        async with aiohttp.ClientSession(cookies = {"_ol":"en_US"},
                                         timeout=aiohttp.ClientTimeout(total=timeout)) as session:
             async with session.get(f"https://www.op.gg/summoners/kr/{league_name}") as response:
                 soup = BeautifulSoup(await response.text(), "html.parser")
