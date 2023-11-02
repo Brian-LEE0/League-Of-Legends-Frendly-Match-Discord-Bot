@@ -7,7 +7,6 @@ import unittest
 # Riot Games API 키를 입력하세요.
 
 API_KEY = os.environ['RIOT_API_KEY']
-print("others2")
 def get_summoner_info_by_name(summoner_name):
     base_url = "https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/"
     headers = {

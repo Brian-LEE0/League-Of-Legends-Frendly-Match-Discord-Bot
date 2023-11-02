@@ -139,9 +139,10 @@ class MatchInfo():
                 "grandmaster" : 8,
                 "challenger" : 9,
             }.get(linfo["cur_tier"],0)
-
+            
             cur_tier_and_most_3 =  TIER_TO_DISCORD.get(linfo["cur_tier"],linfo["cur_tier"])+" "
             cur_tier_and_most_3 += "".join([CHAMP_TO_DISCORD.get(most[0],most[0]) for most in linfo['most_3']])
+            
             player_info_list.append({
                 "did" : did,
                 "lid" : lid,
@@ -228,7 +229,6 @@ class MatchInfo():
             team1_list.append("ㅤ"*12)
         while(len(team2_list) < 6):
             team2_list.append("ㅤ"*12)
-        #print(team1_list)
         
         embed.add_field(name="**1팀**", value= "\n".join(team1_list), inline=True)
         embed.add_field(name="**2팀**", value= "\n".join(team2_list), inline=True)
