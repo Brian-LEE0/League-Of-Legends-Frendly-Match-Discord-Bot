@@ -25,7 +25,7 @@ def get_json_from_redis(key, expire = 0):
     :return: 불러온 데이터 (존재하지 않을 경우 None 반환)
     """
     data = json.loads(redis_client.get(key))
-    logger.info(f"get_json_from_redis {key} {data}")
+    #logger.info(f"get_json_from_redis {key} {data}")
     if expire :
         redis_client.expire(key, expire)
     return data
@@ -53,6 +53,6 @@ def get_str_from_redis(key, expire = 0):
         redis_client.expire(key, expire)
     
     if str :
-        logger.info(f"get_str_from_redis {key} {str.decode('utf-8')}")
+        #logger.info(f"get_str_from_redis {key} {str.decode('utf-8')}")
         return str.decode('utf-8')
     return None

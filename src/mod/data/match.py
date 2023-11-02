@@ -31,8 +31,9 @@ class MatchInfo():
         if ctn is None:
             return False
         
-        ctn = ctn.split("\n")
         self.players.append(user) # inc player
+        
+        ctn = ctn.split("\n")
         ctn[-1] = f"현재인원 : {len(self)}/{self.max}" if len(self) <= self.max else f"현재인원 : {self.max}/{self.max} 후보인원 : {len(self) - self.max}명"
         ctn = "\n".join(ctn)
         
@@ -170,6 +171,76 @@ class MatchInfo():
         if len(self) > self.max :
             embed.add_field(name="후보선수", value=", ".join([p.mention for p in self.players[self.max:]]), inline=True)
         return embed
+    
+    def get_draft_embed_and_list(self,player_info_list = [], team1=[],team2=[]):
+        embed = discord.Embed(
+            title="팀 드래프트",
+            color=discord.Color.red()
+        )
+        
+        if not player_info_list :
+            for p in self.players[:self.max] :
+                did = p.mention
+                lid = get_league_from_discord_id(did)
+                linfo = get_league_info_from_league(lid)
+                priority = {
+                    "unranked" : 0,
+                    "iron" : 1,
+                    "silver" : 2,
+                    "gold" : 3,
+                    "platinum" : 4,
+                    "emerald" : 5,
+                    "diamond" : 6,
+                    "master" : 7,
+                    "grandmaster" : 8,
+                    "challenger" : 9,
+                }.get(linfo["cur_tier"],0)
+
+                cur_tier =  TIER_TO_DISCORD.get(linfo["cur_tier"],linfo["cur_tier"])
+                player_info_list.append({
+                    "did" : did,
+                    "lid" : lid,
+                    "linfo" : linfo,
+                    "cur_tier" : cur_tier,
+                    "priority" : priority,
+                    "selected": False
+                })
+                
+                player_info_list.sort(
+                    key=lambda x : x["priority"],
+                    reverse=True
+                )
+                
+        else :
+            for p in player_info_list :
+                p["selected"]=False
+        team1_list = []
+        team2_list = []
+        
+        for n in team1 :
+            player_info_list[n]["selected"] = True
+            team1_list.append(player_info_list[n]["cur_tier"] + player_info_list[n]["lid"])
+        for n in team2 :
+            player_info_list[n]["selected"] = True
+            team2_list.append(player_info_list[n]["cur_tier"] + player_info_list[n]["lid"])
+            
+        while(len(team1_list) < 6):
+            team1_list.append("ㅤ"*12)
+        while(len(team2_list) < 6):
+            team2_list.append("ㅤ"*12)
+        #print(team1_list)
+        
+        embed.add_field(name="**1팀**", value= "\n".join(team1_list), inline=True)
+        embed.add_field(name="**2팀**", value= "\n".join(team2_list), inline=True)
+        
+        not_selected_list = []
+        for idx, p in enumerate(player_info_list):
+            if not p["selected"]:
+                not_selected_list.append([p["cur_tier"], p["lid"], idx])
+        return {
+            "embed":embed,
+            "list":not_selected_list
+        }
 
     async def mention_everyone(self, interaction):
         embed = self.cur_player_embed()
