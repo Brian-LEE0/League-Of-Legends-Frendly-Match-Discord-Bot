@@ -45,7 +45,7 @@ class OPGG:
         
     @staticmethod
     async def get_info(league_name = "고라니를삼킨토끼",
-                        timeout = 2.0, 
+                        timeout = 10.0, 
                         retry_cnt = 0):
         if retry_cnt >= 5:
             return None

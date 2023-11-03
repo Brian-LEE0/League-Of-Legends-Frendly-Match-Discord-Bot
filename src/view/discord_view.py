@@ -119,7 +119,7 @@ class TeamDraftView(discord.ui.View):
             if len(self.team1) == 1 and len(self.team2) == 1:
                 dice = random.randint(1, 6)
                 ctx = f"팀장 등록이 완료되었습니다.\n랜덤 주사위 결과 ***{dice}***!, **{'2팀' if dice % 2 else '1팀'}**이 먼저 팀원을 선택해주세요"
-            if len(self.team1) == self.match.max%2 and len(self.team2) == self.match.max%2:
+            if len(self.team1) == self.match.max/2 and len(self.team2) == self.match.max/2:
                 dice = random.randint(1, 6)
                 ctx = f"팀원 선택이 완료되었습니다.\n랜덤 주사위 결과 ***{dice}***!, **{'2팀' if dice % 2 else '1팀'}**이 먼저 진영을 선택해주세요"
             self.team1.append(int(self.selected_user.values[0]))
@@ -229,9 +229,17 @@ class MatchJoinForm(discord.ui.Modal):
         
     async def callback(self, interaction):
         try :
+            await interaction.response.defer()
             # if() : # league name is exist
             league_info = await OPGG.get_info(league_name=self.league_name.value)
-            set_league_to_league_info(self.league_name.value, league_info)
+            if league_info is None:
+                if get_league_from_discord_id(self.user.mention):
+                    pass
+                else:
+                    raise Exception("존재하지 않는 아이디")
+            else:
+                set_league_to_league_info(self.league_name.value, league_info)
+            
             if self.org_league != self.league_name.value :
                 set_discord_id_to_league(self.user.mention, self.league_name.value)
             
@@ -240,7 +248,7 @@ class MatchJoinForm(discord.ui.Modal):
                 logger.info(f"Suggestion : {self.suggestion.value}")
         except Exception as e:
             logger.error(e)
-            await self.on_error(error=e,interaction=interaction)
+            await interaction.followup.send(f"에러발생, {e}", ephemeral=True, delete_after=3)
 
         # if regex_time.match(self.hour.value) and regex_time.match(self.minute.value) :
         #     await Match[self.key].add_player(self.user, interaction)

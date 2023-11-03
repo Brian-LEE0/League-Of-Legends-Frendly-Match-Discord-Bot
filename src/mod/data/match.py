@@ -42,8 +42,10 @@ class MatchInfo():
         await self._edit_msg_from_id(self.notion_id, ctn) # edit msg
         if len(self) >= self.max : # call everyone
             await self.mention_everyone(interaction)
-        await interaction.response.send_message(f"{interaction.user.mention} 님의 참가 신청이 완료 되었습니다.", ephemeral=True, delete_after=3)
-        return True
+        if interaction.response.is_done() :
+            return await interaction.followup.send(content = f"{interaction.user.mention} 님의 참가 신청이 완료 되었습니다.", ephemeral=True, delete_after=3)
+        return await interaction.response.send_message(content = f"{interaction.user.mention} 님의 참가 신청이 완료 되었습니다.", ephemeral=True, delete_after=3)
+    
 
     async def remove_player(self, user, interaction):
         if not self.is_player_exist(user):
@@ -68,8 +70,10 @@ class MatchInfo():
             await self._edit_msg_from_id(self.mention_everyone_id, "", delete=True)
             self.mention_everyone_id = None
             self.fixed_time = None
-        await interaction.response.send_message(f"{interaction.user.mention} 님의 참가 신청이 철회 되었습니다.", ephemeral=True, delete_after=3)
-        return True
+        if interaction.response.is_done() :
+            return await interaction.followup.send(content = f"{interaction.user.mention} 님의 참가 신청이 철회 되었습니다.", ephemeral=True, delete_after=3)
+        return await interaction.response.send_message(content = f"{interaction.user.mention} 님의 참가 신청이 철회 되었습니다.", ephemeral=True, delete_after=3)
+
 
     def is_player_exist(self, player):
         return player in self.players
