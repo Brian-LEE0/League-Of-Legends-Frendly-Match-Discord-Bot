@@ -34,8 +34,7 @@ class MatchInfo():
         if ctx is None:
             return False
         
-        for i in range(10):
-            self.players.append(user) # inc player
+        self.players.append(user) # inc player
         
         ctx = ctx.split("\n")
         ctx[-1] = f"현재인원 : {len(self)}/{self.max}" if len(self) <= self.max else f"현재인원 : {self.max}/{self.max} 후보인원 : {len(self) - self.max}명"
