@@ -75,8 +75,8 @@ class MatchInfo():
             self.mention_everyone_id = None
             self.fixed_time = None
         if interaction.response.is_done() :
-            return await interaction.followup.send(content = f"{interaction.user.mention} 님의 참가 신청이 철회 되었습니다.", ephemeral=True, delete_after=3)
-        return await interaction.response.send_message(content = f"{interaction.user.mention} 님의 참가 신청이 철회 되었습니다.", ephemeral=True, delete_after=3)
+            return await interaction.followup.send(content = f"{user.mention} 님의 참가 신청이 철회 되었습니다.", ephemeral=True, delete_after=3)
+        return await interaction.response.send_message(content = f"{user.mention} 님의 참가 신청이 철회 되었습니다.", ephemeral=True, delete_after=3)
 
     def is_player_exist(self, player):
         return player in self.players
@@ -141,14 +141,15 @@ class MatchInfo():
             priority = {
                 "unranked" : 0,
                 "iron" : 1,
-                "silver" : 2,
-                "gold" : 3,
-                "platinum" : 4,
-                "emerald" : 5,
-                "diamond" : 6,
-                "master" : 7,
-                "grandmaster" : 8,
-                "challenger" : 9,
+                "bronze" : 2,
+                "silver" : 3,
+                "gold" : 4,
+                "platinum" : 5,
+                "emerald" : 6,
+                "diamond" : 7,
+                "master" : 8,
+                "grandmaster" : 9,
+                "challenger" : 10,
             }.get(linfo["cur_tier"],0)
             
             cur_tier_and_most_3 =  TIER_TO_DISCORD.get(linfo["cur_tier"],linfo["cur_tier"])+" "

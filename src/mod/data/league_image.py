@@ -169,6 +169,7 @@ CHAMP_TO_DISCORD = {
 TIER_TO_DISCORD = {
     "unranked" : "<:Unranked:1164809859754106910>",
     "iron" : "<:Iron:1164809858260942848>",
+    "bronze": "<:Bronze:1164809848412721273>",
     "silver" : "<:Silver:1164809855064883220>",
     "gold" : "<:Gold:1164809850186895401>",
     "platinum" : "<:Platinum:1164809853353611355>",
