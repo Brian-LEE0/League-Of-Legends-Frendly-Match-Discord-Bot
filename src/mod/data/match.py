@@ -275,7 +275,7 @@ class MatchInfo():
             embed = self.cur_player_embed()
             ctx = self.cur_player_mention()
             msg = f"{ctx}\n내전이 **{self.fixed_time}**에 시작될 예정입니다\n참가자 모두 빠짐없이 확인해주세요!"
-            await self._edit_msg_from_id(self.mention_everyone_id, content=msg, embed=embed, view = MatchInfoView(self.key))
+            await self._edit_msg_from_id(self.mention_everyone_id, content=msg, embed=embed)
     
     async def mention_everyone(self, interaction):
         embed = self.cur_player_embed()
