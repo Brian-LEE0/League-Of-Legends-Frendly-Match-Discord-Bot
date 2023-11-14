@@ -40,9 +40,10 @@ async def create_frendly_match(
     # send msg
     _ = await ctx.response.send_message(f"{ctx.author.mention}님이 내전을 생성하였습니다.", ephemeral=True, delete_after=3)
     notion_msg = await ctx.channel.send(notion_str, view=MatchJoinView(key))
+    tool_msg = await ctx.channel.send(view=ToolView(key))
     
     # make match class
-    Match[key] = MatchInfo(key, ctx.author, setted_time, notion_msg.id, max)
+    Match[key] = MatchInfo(key, ctx.author, setted_time, notion_msg.id, tool_msg.id, max)
     
     # logging
     logger.info(f"generate notion msg : {notion_msg.id}")

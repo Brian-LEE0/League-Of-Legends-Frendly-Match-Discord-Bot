@@ -12,10 +12,11 @@ class Match():
         self.d
         
 class MatchInfo():
-    def __init__(self, key, creator, setted_time, notion_id, max):
+    def __init__(self, key, creator, setted_time, notion_id, tool_id, max):
         self.key = key
         self.creator = creator
         self.notion_id = notion_id
+        self.tool_id = tool_id
         self.mention_everyone_id = None
         self.players: list = list()
         self.setted_time = setted_time
@@ -248,7 +249,7 @@ class MatchInfo():
         not_selected_list = []
         for idx, p in enumerate(player_info_list):
             if not p["selected"]:
-                not_selected_list.append([p["cur_tier"], p["lid"], idx])
+                not_selected_list.append([p["cur_tier"], p["lid"], idx, p["did"]])
         return {
             "embed":embed,
             "list":not_selected_list
@@ -293,3 +294,4 @@ class MatchInfo():
     async def del_message(self):
         await self._edit_msg_from_id(self.mention_everyone_id, content="", delete=True)
         await self._edit_msg_from_id(self.notion_id, content="", delete=True)
+        await self._edit_msg_from_id(self.tool_id, content="", delete=True)

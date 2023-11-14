@@ -5,7 +5,7 @@ from mod.opgg import OPGG
 
 from mod.util.logger import logger
 from mod.util.crud import *
-
+import re
 import random
 
 class MatchJoinView(discord.ui.View):
@@ -36,11 +36,11 @@ class MatchJoinView(discord.ui.View):
         msg = f"총 인원 : {len(match)}/{match.max}"
         await interaction.response.send_message(msg,
                                                 embed=embed,
-                                                view = MatchInfoView(self.key),
+                                                #view = MatchInfoView(self.key),
                                                 ephemeral=True,
                                                 delete_after=60)  # Send a message with our View class that contains the button
         
-    @discord.ui.button(label="팀 드래프트", style=discord.ButtonStyle.gray, emoji="🎲", row=0)
+    @discord.ui.button(label="팀 드래프트", style=discord.ButtonStyle.gray, emoji="🎲", row=1)
     async def team_draft(self, button, interaction):
         await interaction.response.defer()
         logger.info(f"push team draft button id : {button.custom_id} key : {self.key}")
@@ -78,7 +78,62 @@ class MatchJoinView(discord.ui.View):
             await match.del_message()
         else:
             await interaction.followup.send(f"{interaction.user.mention}님이 생성한 매치가 아닙니다.", ephemeral=True, delete_after=3)
+class PlayerDeleteSelect(discord.ui.Select):
+    def __init__(self, key):
+        self.key = key
+        
+        match = Match[self.key]
+        usr_list = match.get_draft_embed_and_list()["list"]
+        options : list = [discord.SelectOption(emoji=usr[0], label=usr[1], value=str(usr[3])) for usr in usr_list]
+        
+        super().__init__(
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
+        
+    async def callback(self, interaction):
+        match = Match[self.key]
+        player_mention = self.values[0]
+        match.get_player_by_id(int(re.sub(r'[^0-9]', '', player_mention)))
+        await match.remove_player(interaction.user, interaction)
+        await interaction.followup.send(f"{interaction.user.mention}님이 {player_mention}님을 매치에서 제거했습니다.")
+        
+        # self.disabled = True
+        # await interaction.followup.edit_message(view=self.view)
+        
+class PlayerDeleteView(discord.ui.View):
+    def __init__(self, key, timeout=None):
+        super().__init__(timeout=timeout)
+        self.add_item(PlayerDeleteSelect(key))
+        
+class ToolView(discord.ui.View):
+    def __init__(self, key, timeout=None):
+        super().__init__(timeout=timeout)
+        self.key = key
+        
+    @discord.ui.button(label="시간 변경", style=discord.ButtonStyle.blurple, row=0, emoji="⏰")
+    async def join(self, button, interaction):
+        await interaction.response.defer()
+        return await interaction.followup.send(f"곧 구현될 기능입니다.", ephemeral=True, delete_after=3)
+        logger.info(f"push join button id : {button.custom_id} key : {self.key}")
+        match = Match[self.key]
+        if not match.is_player_exist(interaction.user):
+            await interaction.response.send_modal(MatchJoinForm(interaction.message, self.key, interaction.user))
+        else:
+            await interaction.response.send_message(f"이미 내전을 신청한 유저입니다.", ephemeral=True)
 
+    @discord.ui.button(label="선수 삭제", style=discord.ButtonStyle.red, row=0, emoji="🗑️")
+    async def unjoin(self, button, interaction):
+        await interaction.response.defer()
+        logger.info(f"push player delete button id : {button.custom_id} key : {self.key}")
+        match = Match[self.key]
+        if len(match) > 0 :
+            return await interaction.followup.send(f"***⚠️ 주의! 선수를 매치에서 제거합니다.***",
+                                                    view=PlayerDeleteView(self.key), ephemeral=True, delete_after=30)
+        await interaction.followup.send(f"참가를 신청한 선수가 없습니다.", ephemeral=True, delete_after=3)
+        
+@DeprecationWarning
 class MatchInfoView(discord.ui.View):
     def __init__(self, key, timeout=None):
         super().__init__(timeout=timeout)
