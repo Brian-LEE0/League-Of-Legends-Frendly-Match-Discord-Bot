@@ -1,4 +1,3 @@
-from typing_extensions import deprecated
 import discord
 
 from mod.discordbot import Match
@@ -37,7 +36,6 @@ class MatchJoinView(discord.ui.View):
         msg = f"총 인원 : {len(match)}/{match.max}"
         await interaction.response.send_message(msg,
                                                 embed=embed,
-                                                #view = MatchInfoView(self.key),
                                                 ephemeral=True,
                                                 delete_after=60)  # Send a message with our View class that contains the button
         
@@ -135,7 +133,6 @@ class ToolView(discord.ui.View):
                                                     view=PlayerDeleteView(self.key), ephemeral=True, delete_after=30)
         await interaction.followup.send(f"참가를 신청한 선수가 없습니다.", ephemeral=True, delete_after=3)
         
-@deprecated
 class MatchInfoView(discord.ui.View):
     def __init__(self, key, timeout=None):
         super().__init__(timeout=timeout)
