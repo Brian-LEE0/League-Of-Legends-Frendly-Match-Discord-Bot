@@ -5,7 +5,6 @@ from mod.util.crud import *
 from mod.util.logger import logger
 from mod.util.time import TIME as T
 from mod.data.league_image import *
-from view.discord_view import MatchInfoView
     
 class Match():
     def __init__(self) :
@@ -41,14 +40,14 @@ class MatchInfo():
         ctx[-1] = f"현재인원 : {len(self)}/{self.max}" if len(self) <= self.max else f"현재인원 : {self.max}/{self.max} 후보인원 : {len(self) - self.max}명"
         ctx = "\n".join(ctx)
         
-        logger.info(f"{interaction.channel.mention} {interaction.user} 참가 신청")
+        logger.info(f"{user.mention} {interaction.user} 참가 신청")
         
         await self._edit_msg_from_id(self.notion_id, content=ctx) # edit msg
         if len(self) >= self.max : # call everyone
             await self.mention_everyone(interaction)
         if interaction.response.is_done() :
-            return await interaction.followup.send(content = f"{interaction.user.mention} 님의 참가 신청이 완료 되었습니다.", ephemeral=True, delete_after=3)
-        return await interaction.response.send_message(content = f"{interaction.user.mention} 님의 참가 신청이 완료 되었습니다.", ephemeral=True, delete_after=3)
+            return await interaction.followup.send(content = f"{user.mention} 님의 참가 신청이 완료 되었습니다.", ephemeral=True, delete_after=3)
+        return await interaction.response.send_message(content = f"{user.mention} 님의 참가 신청이 완료 되었습니다.", ephemeral=True, delete_after=3)
     
 
     async def remove_player(self, user, interaction):

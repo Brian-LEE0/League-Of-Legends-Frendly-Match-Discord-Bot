@@ -11,7 +11,7 @@ class OPGG:
             if rank_solo_tier is None :
                 prev_tier = soup.find("ul", "tier-list").find("li")
                 if prev_tier is None :
-                    return "Unranked"
+                    return "unranked"
                 prev_tier = prev_tier.text.split()
                 if len(prev_tier) == 4 :
                     tier = prev_tier[2]

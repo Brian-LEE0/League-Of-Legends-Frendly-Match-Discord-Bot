@@ -78,11 +78,8 @@ class MatchJoinView(discord.ui.View):
         else:
             await interaction.followup.send(f"{interaction.user.mention}님이 생성한 매치가 아닙니다.", ephemeral=True, delete_after=3)
 class PlayerDeleteSelect(discord.ui.Select):
-    def __init__(self, key):
-        self.key = key
-        
-        match = Match[self.key]
-        usr_list = match.get_draft_embed_and_list()["list"]
+    def __init__(self, match, usr_list):
+        self.match = match
         options : list = [discord.SelectOption(emoji=usr[0], label=usr[1], value=str(usr[3])) for usr in usr_list]
         
         super().__init__(
@@ -92,25 +89,24 @@ class PlayerDeleteSelect(discord.ui.Select):
         )
         
     async def callback(self, interaction):
-        match = Match[self.key]
         player_mention = self.values[0]
-        match.get_player_by_id(int(re.sub(r'[^0-9]', '', player_mention)))
-        await match.remove_player(interaction.user, interaction)
+        deleted_user = self.match.get_player_by_id(int(re.sub(r'[^0-9]', '', player_mention)))
+        await self.match.remove_player(deleted_user, interaction)
         await interaction.followup.send(f"{interaction.user.mention}님이 {player_mention}님을 매치에서 제거했습니다.")
         
         # self.disabled = True
         # await interaction.followup.edit_message(view=self.view)
         
 class PlayerDeleteView(discord.ui.View):
-    def __init__(self, key, timeout=None):
+    def __init__(self, match, usr_list, timeout=None):
         super().__init__(timeout=timeout)
-        self.select = PlayerDeleteSelect(key)
+        self.select = PlayerDeleteSelect(match, usr_list)
         self.add_item(self.select)
         
 class ToolView(discord.ui.View):
     def __init__(self, key, timeout=None):
-        super().__init__(timeout=timeout)
         self.key = key
+        super().__init__(timeout=timeout)
         
     @discord.ui.button(label="시간 변경", style=discord.ButtonStyle.blurple, row=0, emoji="⏰")
     async def join(self, button, interaction):
@@ -129,8 +125,10 @@ class ToolView(discord.ui.View):
         logger.info(f"push player delete button id : {button.custom_id} key : {self.key}")
         match = Match[self.key]
         if len(match) > 0 :
+            player_info_list = []
+            draft_info = match.get_draft_embed_and_list(player_info_list)
             return await interaction.followup.send(f"***⚠️ 주의! 선수를 매치에서 제거합니다.***",
-                                                    view=PlayerDeleteView(self.key), ephemeral=True, delete_after=30)
+                                                    view=PlayerDeleteView(match, draft_info["list"]), ephemeral=True, delete_after=30)
         await interaction.followup.send(f"참가를 신청한 선수가 없습니다.", ephemeral=True, delete_after=3)
         
 class MatchInfoView(discord.ui.View):
