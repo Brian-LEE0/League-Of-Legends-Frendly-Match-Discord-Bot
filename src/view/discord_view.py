@@ -293,7 +293,7 @@ class MatchJoinForm(discord.ui.Modal):
             await interaction.response.defer()
             # if() : # league name is exist
             my_league_full_name = self.league_name.value + self.league_tag.value
-            league_info = await OPGG.get_info(league_name=my_league_full_name)
+            league_info = await OPGG.get_info(league_name=self.league_name.value, league_tag=self.league_tag.value)
             if league_info is None:
                 if get_league_from_discord_id(self.user.mention):
                     pass

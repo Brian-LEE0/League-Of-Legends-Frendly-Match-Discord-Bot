@@ -45,14 +45,15 @@ class OPGG:
         
     @staticmethod
     async def get_info(league_name = "고라니를삼킨토끼",
+                       league_tag = "#KR1",
                         timeout = 10.0, 
                         retry_cnt = 0):
         if retry_cnt >= 5:
             return None
         async with aiohttp.ClientSession(cookies = {"_ol":"en_US"},
                                         timeout=aiohttp.ClientTimeout(total=timeout)) as session:
-            logger.info(f"req to : https://www.op.gg/summoners/kr/{league_name.replace('#','-')}")
-            async with session.get(f"https://www.op.gg/summoners/kr/{league_name.replace('#','-')}") as response:
+            logger.info(f"req to : https://www.op.gg/summoners/kr/{league_name}-{league_tag[1:]}")
+            async with session.get(f"https://www.op.gg/summoners/kr/{league_name}-{league_tag[1:]}") as response:
                 soup = BeautifulSoup(await response.text(), "html.parser")
                 tier = OPGG._get_tier(soup)
                 if tier is None :
