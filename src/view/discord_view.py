@@ -260,7 +260,7 @@ class MatchJoinForm(discord.ui.Modal):
         if self.org_league and "#" not in self.org_league :
             self.org_league += "#KR1"
         self.org_league_name = self.org_league.split("#")[0] if self.org_league else None
-        self.org_league_tag = self.org_league.split("#")[1] if self.org_league else None
+        self.org_league_tag = ("#" + self.org_league.split("#")[1]) if self.org_league else None
 
         self.league_name = discord.ui.InputText(
             style=discord.InputTextStyle.singleline,
@@ -293,7 +293,7 @@ class MatchJoinForm(discord.ui.Modal):
             await interaction.response.defer()
             # if() : # league name is exist
             my_league_full_name = self.league_name.value + self.league_tag.value
-            league_info = await OPGG.get_info(league_name=self.league_name.value, league_tag=self.league_tag.value)
+            league_info = await OPGG.get_info(league_name=my_league_full_name)
             if league_info is None:
                 if get_league_from_discord_id(self.user.mention):
                     pass
