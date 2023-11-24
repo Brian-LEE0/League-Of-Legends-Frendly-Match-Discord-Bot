@@ -257,6 +257,10 @@ class MatchJoinForm(discord.ui.Modal):
         self.key = key
         self.message = message
         self.org_league = get_league_from_discord_id(self.user.mention)
+        if self.org_league and "#" not in self.org_league :
+            self.org_league += "#KR1"
+        self.org_league_name = self.org_league.split("#")[0] if self.org_league else None
+        self.org_league_tag = self.org_league.split("#")[1] if self.org_league else None
 
         self.league_name = discord.ui.InputText(
             style=discord.InputTextStyle.singleline,
@@ -265,7 +269,15 @@ class MatchJoinForm(discord.ui.Modal):
             value=self.org_league,
             max_length=16,
         )
-        self.add_item(self.league_name)
+
+        self.league_tag = discord.ui.InputText(
+            style=discord.InputTextStyle.singleline,
+            label="리그 오브 레전드 태그",
+            placeholder="#KR1",
+            value=self.org_league_tag,
+            max_length=16,
+        )
+        self.add_item(self.league_tag)
 
         self.suggestion = discord.ui.InputText(
             style=discord.InputTextStyle.long,
@@ -279,21 +291,22 @@ class MatchJoinForm(discord.ui.Modal):
         try :
             await interaction.response.defer()
             # if() : # league name is exist
-            league_info = await OPGG.get_info(league_name=self.league_name.value)
+            my_league_full_name = self.league_name.value + self.league_tag.value
+            league_info = await OPGG.get_info(league_name=my_league_full_name)
             if league_info is None:
                 if get_league_from_discord_id(self.user.mention):
                     pass
                 else:
                     raise Exception("존재하지 않는 아이디")
             else:
-                set_league_to_league_info(self.league_name.value, league_info)
+                set_league_to_league_info(my_league_full_name, league_info)
             
-            if self.org_league != self.league_name.value :
-                set_discord_id_to_league(self.user.mention, self.league_name.value)
+            if self.org_league != my_league_full_name :
+                set_discord_id_to_league(self.user.mention, my_league_full_name)
             
             await Match[self.key].add_player(self.user, interaction)
-            if self.suggestion.value:
-                logger.info(f"Suggestion : {self.suggestion.value}")
+            if my_league_full_name:
+                logger.info(f"Suggestion : {my_league_full_name}")
         except Exception as e:
             logger.error(e)
             await interaction.followup.send(f"에러발생, {e}", ephemeral=True, delete_after=3)

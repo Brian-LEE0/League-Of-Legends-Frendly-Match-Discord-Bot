@@ -51,7 +51,7 @@ class OPGG:
             return None
         async with aiohttp.ClientSession(cookies = {"_ol":"en_US"},
                                         timeout=aiohttp.ClientTimeout(total=timeout)) as session:
-            async with session.get(f"https://www.op.gg/summoners/kr/{league_name}") as response:
+            async with session.get(f"https://www.op.gg/summoners/kr/{league_name.replace('#','-')}") as response:
                 soup = BeautifulSoup(await response.text(), "html.parser")
                 tier = OPGG._get_tier(soup)
                 if tier is None :
