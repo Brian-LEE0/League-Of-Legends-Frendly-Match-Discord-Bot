@@ -302,8 +302,7 @@ class MatchJoinForm(discord.ui.Modal):
             else:
                 set_league_to_league_info(my_league_full_name, league_info)
             
-            if self.org_league != my_league_full_name :
-                set_discord_id_to_league(self.user.mention, my_league_full_name)
+            set_discord_id_to_league(self.user.mention, my_league_full_name)
             
             await Match[self.key].add_player(self.user, interaction)
             if my_league_full_name:
