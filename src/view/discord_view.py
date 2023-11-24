@@ -266,7 +266,7 @@ class MatchJoinForm(discord.ui.Modal):
             style=discord.InputTextStyle.singleline,
             label="리그 오브 레전드 닉네임",
             placeholder="Hide on bush",
-            value=self.org_league,
+            value=self.org_league_name,
             max_length=16,
         )
         self.add_item(self.league_name)
