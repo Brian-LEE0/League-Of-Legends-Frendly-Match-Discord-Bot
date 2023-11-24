@@ -269,6 +269,7 @@ class MatchJoinForm(discord.ui.Modal):
             value=self.org_league,
             max_length=16,
         )
+        self.add_item(self.league_name)
 
         self.league_tag = discord.ui.InputText(
             style=discord.InputTextStyle.singleline,
