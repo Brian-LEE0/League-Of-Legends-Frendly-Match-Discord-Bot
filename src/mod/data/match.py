@@ -4,14 +4,15 @@ from mod.discordbot import bot
 from mod.util.crud import *
 from mod.util.logger import logger
 from mod.util.time import TIME as T
-from mod.data.league_image import *
+import mod.data.val_image as val_image
+import mod.data.league_image as league_image
     
 class Match():
     def __init__(self) :
         self.d
         
 class MatchInfo():
-    def __init__(self, key, creator, setted_time, notion_id, tool_id, max):
+    def __init__(self, key, creator, setted_time, notion_id, tool_id, max, game=""):
         self.key = key
         self.creator = creator
         self.notion_id = notion_id
@@ -21,6 +22,7 @@ class MatchInfo():
         self.setted_time = setted_time
         self.fixed_time = None
         self.max = max
+        self.game = game
 
     def __len__(self):
         return len(self.players)
@@ -88,7 +90,7 @@ class MatchInfo():
         return None
 
     def cur_player_league(self, separator=" "):
-        players = [get_league_from_discord_id(did.mention) for did in self.players]
+        players = [get_league_from_discord_id(did.mention + self.game) for did in self.players]
         ctx = separator.join(players)
         return ctx
 
@@ -127,33 +129,54 @@ class MatchInfo():
         return msg.content
 
     def cur_player_embed(self):
+        if self.game == "val":
+            title="발로란트 내전 참가자"
+        else :
+            title="롤 내전 참가자"
+            
         embed = discord.Embed(
-            title="참가자들 전적 보러가기!!",
-            url="https://www.op.gg/multisearch/kr?summoners=" + self.cur_player_league(",").replace(" ", ""),
+            title=title,
             color=discord.Color.green()
         )
         
         player_info_list = []
         for p in self.players[:self.max] :
             did = p.mention
-            lid = get_league_from_discord_id(did)
-            linfo = get_league_info_from_league(lid)
-            priority = {
-                "unranked" : 0,
-                "iron" : 1,
-                "bronze" : 2,
-                "silver" : 3,
-                "gold" : 4,
-                "platinum" : 5,
-                "emerald" : 6,
-                "diamond" : 7,
-                "master" : 8,
-                "grandmaster" : 9,
-                "challenger" : 10,
-            }.get(linfo["cur_tier"],0)
+            lid = get_league_from_discord_id(did + self.game)
+            linfo = get_league_info_from_league(lid + self.game)
+            if self.game == "val":
+                priority = {
+                    "unrank" : 0,
+                    "iron" : 1,
+                    "bronze" : 2,
+                    "silver" : 3,
+                    "gold" : 4,
+                    "platinum" : 5,
+                    "diamond" : 6,
+                    "ascendant" : 7,
+                    "immortal" : 8,
+                    "radiant" : 9,
+                }.get(linfo["cur_tier"],0)
+                
+                cur_tier_and_most_3 =  val_image.TIER_TO_DISCORD.get(linfo["cur_tier"],linfo["cur_tier"])+" "
+                cur_tier_and_most_3 += "".join([val_image.CHAMP_TO_DISCORD.get(most[0],most[0]) for most in linfo['most_3']])
+            else:
+                priority = {
+                    "unranked" : 0,
+                    "iron" : 1,
+                    "bronze" : 2,
+                    "silver" : 3,
+                    "gold" : 4,
+                    "platinum" : 5,
+                    "emerald" : 6,
+                    "diamond" : 7,
+                    "master" : 8,
+                    "grandmaster" : 9,
+                    "challenger" : 10,
+                }.get(linfo["cur_tier"],0)
             
-            cur_tier_and_most_3 =  TIER_TO_DISCORD.get(linfo["cur_tier"],linfo["cur_tier"])+" "
-            cur_tier_and_most_3 += "".join([CHAMP_TO_DISCORD.get(most[0],most[0]) for most in linfo['most_3']])
+                cur_tier_and_most_3 =  league_image.TIER_TO_DISCORD.get(linfo["cur_tier"],linfo["cur_tier"])+" "
+                cur_tier_and_most_3 += "".join([league_image.CHAMP_TO_DISCORD.get(most[0],most[0]) for most in linfo['most_3']])
             
             player_info_list.append({
                 "did" : did,
@@ -171,9 +194,8 @@ class MatchInfo():
         middle_boundary = 5 if len(player_info_list) > 5 else len(player_info_list)
         max_boundary = self.max if len(player_info_list) > self.max else len(player_info_list)
         
-        embed.add_field(name="**내전 DB**", value="[**Link!**](https://docs.google.com/spreadsheets/d/1lSOKjcKNu0lI7EP87KEW2gYEBW4Y7HW8_KawxNuu1L0/edit?usp=sharing)", inline=False)
         embed.add_field(name="**디코닉**", value="\n".join([p["did"] for p in player_info_list[:middle_boundary]]), inline=True)
-        embed.add_field(name="**롤닉**", value="\n".join([p["lid"] for p in player_info_list[:middle_boundary]]), inline=True)
+        embed.add_field(name="**게임닉**", value="\n".join([p["lid"] for p in player_info_list[:middle_boundary]]), inline=True)
         embed.add_field(name="**티어&모스트**", value="\n".join([p["cur_tier_and_most_3"] for p in player_info_list[:middle_boundary]]), inline=True)
         
         if len(self) > 5 :
@@ -194,22 +216,39 @@ class MatchInfo():
         if not player_info_list :
             for p in self.players[:self.max] :
                 did = p.mention
-                lid = get_league_from_discord_id(did)
-                linfo = get_league_info_from_league(lid)
-                priority = {
-                    "unranked" : 0,
-                    "iron" : 1,
-                    "silver" : 2,
-                    "gold" : 3,
-                    "platinum" : 4,
-                    "emerald" : 5,
-                    "diamond" : 6,
-                    "master" : 7,
-                    "grandmaster" : 8,
-                    "challenger" : 9,
-                }.get(linfo["cur_tier"],0)
+                lid = get_league_from_discord_id(did + self.game)
+                linfo = get_league_info_from_league(lid + self.game)
+                if self.game == "val":
+                    priority = {
+                        "unrank" : 0,
+                        "iron" : 1,
+                        "bronze" : 2,
+                        "silver" : 3,
+                        "gold" : 4,
+                        "platinum" : 5,
+                        "diamond" : 6,
+                        "ascendant" : 7,
+                        "immortal" : 8,
+                        "radiant" : 9,
+                    }.get(linfo["cur_tier"],0)
+                    cur_tier =  val_image.TIER_TO_DISCORD.get(linfo["cur_tier"],linfo["cur_tier"])
+                else:
+                    priority = {
+                        "unranked" : 0,
+                        "iron" : 1,
+                        "bronze" : 2,
+                        "silver" : 3,
+                        "gold" : 4,
+                        "platinum" : 5,
+                        "emerald" : 6,
+                        "diamond" : 7,
+                        "master" : 8,
+                        "grandmaster" : 9,
+                        "challenger" : 10,
+                    }.get(linfo["cur_tier"],0)
+                    cur_tier =  league_image.TIER_TO_DISCORD.get(linfo["cur_tier"],linfo["cur_tier"])
 
-                cur_tier =  TIER_TO_DISCORD.get(linfo["cur_tier"],linfo["cur_tier"])
+                
                 player_info_list.append({
                     "did" : did,
                     "lid" : lid,

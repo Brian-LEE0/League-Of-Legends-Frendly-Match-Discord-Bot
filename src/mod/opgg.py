@@ -57,7 +57,7 @@ class OPGG:
                 soup = BeautifulSoup(await response.text(), "html.parser")
                 tier = OPGG._get_tier(soup)
                 if tier is None :
-                    raise Exception("존재하지 않는 아이디")
+                    raise Exception("⚠ 존재하지 않는 아이디")
                 cl = OPGG._get_champ_list(soup)
                 logger.info({"cur_tier" : tier,
                         "most_3" : cl})

@@ -2,6 +2,7 @@ import discord
 
 from mod.discordbot import Match
 from mod.opgg import OPGG
+from mod.opgg_val import OPGG as OPGGVal
 
 from mod.util.logger import logger
 from mod.util.crud import *
@@ -9,16 +10,17 @@ import re
 import random
 
 class MatchJoinView(discord.ui.View):
-    def __init__(self, key, timeout=None):
+    def __init__(self, key, timeout=None, game=""):
         super().__init__(timeout=timeout)
         self.key = key
+        self.game = game
 
     @discord.ui.button(label="참가 신청", style=discord.ButtonStyle.green, row=0)
     async def join(self, button, interaction):
         logger.info(f"push join button id : {button.custom_id} key : {self.key}")
         match = Match[self.key]
         if not match.is_player_exist(interaction.user):
-            await interaction.response.send_modal(MatchJoinForm(interaction.message, self.key, interaction.user))
+            await interaction.response.send_modal(MatchJoinForm(interaction.message, self.key, interaction.user, self.game))
         else:
             await interaction.response.send_message(f"이미 내전을 신청한 유저입니다.", ephemeral=True)
 
@@ -104,20 +106,15 @@ class PlayerDeleteView(discord.ui.View):
         self.add_item(self.select)
         
 class ToolView(discord.ui.View):
-    def __init__(self, key, timeout=None):
+    def __init__(self, key, timeout=None, game=""):
         self.key = key
+        self.game = game
         super().__init__(timeout=timeout)
         
     @discord.ui.button(label="시간 변경", style=discord.ButtonStyle.blurple, row=0, emoji="⏰")
     async def join(self, button, interaction):
         await interaction.response.defer()
         return await interaction.followup.send(f"곧 구현될 기능입니다.", ephemeral=True, delete_after=3)
-        logger.info(f"push join button id : {button.custom_id} key : {self.key}")
-        match = Match[self.key]
-        if not match.is_player_exist(interaction.user):
-            await interaction.response.send_modal(MatchJoinForm(interaction.message, self.key, interaction.user))
-        else:
-            await interaction.response.send_message(f"이미 내전을 신청한 유저입니다.", ephemeral=True)
 
     @discord.ui.button(label="선수 삭제", style=discord.ButtonStyle.red, row=0, emoji="🗑️")
     async def unjoin(self, button, interaction):
@@ -251,12 +248,13 @@ class TeamDraftView(discord.ui.View):
             return await interaction.response.send_message(content=f"에러발생 {e}", ephemeral=True, delete_after=3)
         
 class MatchJoinForm(discord.ui.Modal):
-    def __init__(self, message, key, user):
+    def __init__(self, message, key, user, game):
         super().__init__(title="참가 신청서")
         self.user = user
         self.key = key
         self.message = message
-        self.org_league = get_league_from_discord_id(self.user.mention)
+        self.game = game
+        self.org_league = get_league_from_discord_id(self.user.mention + self.game)
         if self.org_league and "#" not in self.org_league :
             self.org_league += "#KR1"
         self.org_league_name = self.org_league.split("#")[0] if self.org_league else None
@@ -264,7 +262,7 @@ class MatchJoinForm(discord.ui.Modal):
 
         self.league_name = discord.ui.InputText(
             style=discord.InputTextStyle.singleline,
-            label="리그 오브 레전드 닉네임",
+            label="게임 닉네임",
             placeholder="Hide on bush",
             value=self.org_league_name,
             max_length=16,
@@ -293,20 +291,23 @@ class MatchJoinForm(discord.ui.Modal):
             await interaction.response.defer()
             # if() : # league name is exist
             my_league_full_name = self.league_name.value + self.league_tag.value
-            league_info = await OPGG.get_info(league_name=my_league_full_name)
+            if self.game == "val":
+                league_info = await OPGGVal.get_info(val_name=my_league_full_name)
+            else:
+                league_info = await OPGG.get_info(league_name=my_league_full_name)
             if league_info is None:
-                if get_league_from_discord_id(self.user.mention):
+                if get_league_from_discord_id(self.user.mention + self.game):
                     pass
                 else:
                     raise Exception("존재하지 않는 아이디")
             else:
-                set_league_to_league_info(my_league_full_name, league_info)
+                set_league_to_league_info(my_league_full_name + self.game, league_info)
             
-            set_discord_id_to_league(self.user.mention, my_league_full_name)
+            set_discord_id_to_league(self.user.mention + self.game, my_league_full_name)
             
             await Match[self.key].add_player(self.user, interaction)
             if my_league_full_name:
                 logger.info(f"Suggestion : {my_league_full_name}")
         except Exception as e:
             logger.error(e)
-            await interaction.followup.send(f"에러발생, {e}", ephemeral=True, delete_after=3)
+            await interaction.followup.send(f"에러발생, {e}", ephemeral=True, delete_after=20)

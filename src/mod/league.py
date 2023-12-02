@@ -1,3 +1,4 @@
+#DeprecationWarning
 import requests
 from mod.util.logger import logger
 import os
