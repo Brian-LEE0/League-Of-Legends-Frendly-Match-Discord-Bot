@@ -2,9 +2,9 @@ name: Python Package using Conda
 
 on: 
   push:
-    branches: [ svc ]
+    branches: [ main ]
   pull_request:
-    branches: [ svc ]
+    branches: [ main ]
 
 jobs:
   build-linux:
