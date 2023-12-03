@@ -273,7 +273,7 @@ class MatchJoinForm(discord.ui.Modal):
             style=discord.InputTextStyle.singleline,
             label="리그 오브 레전드 태그",
             placeholder="#KR1",
-            value=self.org_league_tag,
+            value=self.org_league_tag if self.org_league_tag is not None else "#KR1",
             max_length=16,
         )
         self.add_item(self.league_tag)

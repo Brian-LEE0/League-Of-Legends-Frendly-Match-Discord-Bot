@@ -24,7 +24,7 @@ CHAMP_TO_DISCORD = {
 }
 
 TIER_TO_DISCORD = {
-    "unrank":"<:unrank:1180451904694796358>",
+    "unrank":"<:unrank:1180874356201631805>",
     "bronze":"<:bronze:1180275584006365226>",
     "ascendant":"<:ascendant:1180275581129076757>",
     "silver":"<:silver:1180275577626828882>",

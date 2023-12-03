@@ -44,8 +44,7 @@ class OPGG:
             return []
         
     @staticmethod
-    async def get_info(league_name = "고라니를삼킨토끼",
-                       league_tag = "KR1",
+    async def get_info(league_name = "고라니를삼킨토끼#KR1",
                         timeout = 10.0, 
                         retry_cnt = 0):
         if retry_cnt >= 5:

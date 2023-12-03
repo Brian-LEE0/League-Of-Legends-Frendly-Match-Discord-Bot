@@ -24,15 +24,15 @@ class OPGG:
         try :
             rank_solo_tier = soup.find("strong","tier-rank").text.lower().strip()
             if rank_solo_tier and rank_solo_tier == "unrank":
-                prev_tier_list = soup.find("ul", "prev-tier-list")
+                prev_tier_list = soup.find("ul", "prev-tier-list").find("li")
                 if prev_tier_list is None :
                     return "unrank"
-                prev_tier = prev_tier_list.find("li").text.split()[2].lower()
+                prev_tier = prev_tier_list.text.split()[2].lower()
                 return prev_tier
             return rank_solo_tier.split()[0]
         except Exception as e:
             logger.info(e)
-            return None
+            return "unrank"
 
     @staticmethod
     def _get_champ_list(soup):
@@ -47,7 +47,7 @@ class OPGG:
             return []
         
     @staticmethod
-    async def get_info(val_name = "고라니를삼킨토끼",
+    async def get_info(val_name = "고라니를삼킨토끼#KR1",
                         timeout = 10.0, 
                         retry_cnt = 0):
         if retry_cnt >= 5:

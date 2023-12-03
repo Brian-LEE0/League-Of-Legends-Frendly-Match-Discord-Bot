@@ -5,10 +5,11 @@ intents.message_content = True
 bot = discord.Bot(description="롤 내전을 위한 봇 입니다", intents=intents)  # Create a bot object
 
 from mod.data.match import MatchInfo
+from mod.data.consts import *
+
 from mod.util.logger import logger
 from mod.util.uuid import generate_uuid
 from mod.util.time import TIME as T
-from mod.consts import *
 
 from view.discord_view import *
 
@@ -80,6 +81,7 @@ async def create_frendly_match(
     # logging
     logger.info(f"generate val notion msg : {notion_msg.id}")
     logger.info(f"Match key : {key} generator : {ctx.author.name} / min_start_time : {setted_time} / max : {max} / channel : {ctx.channel.name}")
+
 # @bot.slash_command(name="시간변경", description="ex) /시간변경 {매치키} {@리그오브레전드} {오후 10시} {30분}")  # Create a slash command
 # async def create_frendly_match(
 #     ctx, 
