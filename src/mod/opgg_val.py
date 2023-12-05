@@ -14,8 +14,6 @@ options.add_argument("--disable-gpu")
 options.add_argument("--user-agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36'")
 options.add_experimental_option('useAutomationExtension', False)
 options.add_experimental_option("excludeSwitches", ["enable-automation"])
-driver = webdriver.Chrome(options=options)
-import asyncio
 import re
 
 class OPGG:
@@ -59,8 +57,10 @@ class OPGG:
         soup = BeautifulSoup(html, "html.parser")
         is_private = soup.find("div","css-nam5yt")
         if is_private is not None :
-            raise Exception(f"⚠ https://valorant.op.gg/profile/{val_name.replace('#','-')} 에서 비공개 상태를 해제 해주세요.")
+            raise Exception(f":warning: https://valorant.op.gg/profile/{val_name.replace('#','-')} 에서 비공개 상태를 해제 해주세요.")
         tier = OPGG._get_tier(soup)
+        if tier is None :
+            raise Exception(f":warning: https://valorant.op.gg/profile/{val_name.replace('#','-')} 에서 계정 상태를 확인하고 다시 신청해주세요.")
         cl = OPGG._get_champ_list(soup)
         logger.info({"cur_tier" : tier,
                 "most_3" : cl})

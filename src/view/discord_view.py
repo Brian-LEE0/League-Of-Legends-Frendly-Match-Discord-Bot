@@ -248,7 +248,7 @@ class TeamDraftView(discord.ui.View):
             return await interaction.response.send_message(content=f"에러발생 {e}", ephemeral=True, delete_after=3)
         
 class MatchJoinForm(discord.ui.Modal):
-    def __init__(self, message, key, user, game):
+    def __init__(self, message, key, user, game=""):
         super().__init__(title="참가 신청서")
         self.user = user
         self.key = key
