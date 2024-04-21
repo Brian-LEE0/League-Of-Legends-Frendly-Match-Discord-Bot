@@ -25,8 +25,9 @@ class OPGG:
                 return tier
             rank_solo_tier = rank_solo_tier.text
             return rank_solo_tier.split()[0]
-        except:
-            return None
+        except Exception as e:
+            logger.info(e)
+            return "unranked"
 
     @staticmethod
     def _get_champ_list(soup):
