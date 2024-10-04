@@ -12,6 +12,7 @@ pytz = "*"
 bs4 = "*"
 load-dotenv = "*"
 selenium = "*"
+pymongo = "*"
 
 [dev-packages]
 
