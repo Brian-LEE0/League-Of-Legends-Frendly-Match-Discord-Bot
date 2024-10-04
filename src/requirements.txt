@@ -33,3 +33,4 @@ wrapt==1.15.0
 yarl==1.9.2
 beautifulsoup4==4.12.2; python_full_version >= '3.6.0'
 bs4==0.0.1
+pymongo==4.10.1

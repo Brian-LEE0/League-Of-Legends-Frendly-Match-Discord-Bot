@@ -12,6 +12,9 @@ from mod.util.uuid import generate_uuid
 from mod.util.time import TIME as T
 
 from view.discord_view import *
+from view.competition_view import *
+
+import mod.util.mongo as mongo
 
 import re
 
@@ -81,6 +84,30 @@ async def create_frendly_match(
     # logging
     logger.info(f"generate val notion msg : {notion_msg.id}")
     logger.info(f"Match key : {key} generator : {ctx.author.name} / min_start_time : {setted_time} / max : {max} / channel : {ctx.channel.name}")
+    
+@bot.slash_command(name="롤대회", description="")  # Create a slash command
+async def create_competition_match(
+    ctx,
+    max: discord.commands.Option(int, "최대 인원", default=999),
+    ):
+    global Match
+    
+    # generate key
+    match_id = generate_uuid()
+    
+    notion_str = f"현재인원 : 0명"
+    notion_msg = await ctx.channel.send(notion_str, view=CompetitionJoinView(match_id, game="lol"))
+    
+    matches_db = mongo.Match()
+    matches_db.create_match("lol", match_id, notion_msg.id, max)
+    _ = await ctx.response.send_message(f"{ctx.author.mention}님이 **롤** 대회를 생성하였습니다.", ephemeral=True, delete_after=3)
+    
+    
+    
+    
+    
+    
+    
 
 # @bot.slash_command(name="시간변경", description="ex) /시간변경 {매치키} {@리그오브레전드} {오후 10시} {30분}")  # Create a slash command
 # async def create_frendly_match(
