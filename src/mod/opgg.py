@@ -14,7 +14,7 @@ class OPGG:
             return tier
         except Exception as e:
             logger.info(e)
-            raise Exception("⚠ 존재하지 않는 아이디 티어")
+            raise Exception("⚠️ 존재하지 않는 아이디 티어")
 
     @staticmethod
     def _get_champ_list(soup):
@@ -29,7 +29,7 @@ class OPGG:
             return champ_list
         except Exception as e:
             logger.info(e)
-            raise Exception("⚠ 존재하지 않는 아이디 챔프")
+            raise Exception("⚠️ 존재하지 않는 아이디 챔프")
         
     @staticmethod
     async def get_info(league_name = "고라니를삼킨토끼#KR1",
@@ -56,7 +56,7 @@ class OPGG:
                         cl = []
                 
                 if if_unranked_return_error and tier == "unranked":
-                    raise Exception("⚠ 언랭 계정은 참가할 수 없습니다.")
+                    raise Exception("⚠️ 언랭 계정은 참가할 수 없습니다.")
                 logger.info({"cur_tier" : tier,
                         "most_3" : cl})
                 return {"cur_tier" : tier,

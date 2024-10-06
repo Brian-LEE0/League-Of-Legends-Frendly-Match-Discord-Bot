@@ -39,6 +39,10 @@ class Player:
         lol_id1,
         lol_id2,
         lol_id3,
+        
+        position1,
+        position2,
+        position3,
         is_streamable="가능",
         suggestion=""
     ):
@@ -48,8 +52,17 @@ class Player:
             "lol_id1": lol_id1,
             "lol_id2": lol_id2,
             "lol_id3": lol_id3,
+            "position1": position1,
+            "position2": position2,
+            "position3": position3,
             "is_streamable": is_streamable,
             "suggestion": suggestion
+        })
+        
+    def delete_player(self, match_key, discord_id):
+        self.coll.delete_one({
+            "match_key": match_key,
+            "discord_id": discord_id
         })
     
     def get_player(self, match_key, discord_id):

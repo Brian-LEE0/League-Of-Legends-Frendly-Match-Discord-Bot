@@ -89,13 +89,15 @@ async def create_frendly_match(
 async def create_competition_match(
     ctx,
     max: discord.commands.Option(int, "최대 인원", default=999),
+    match_id: discord.commands.Option(str, "대회 키", default="")
     ):
-    global Match
-    
     # generate key
-    match_id = generate_uuid()
+    if match_id == "":
+        match_id = generate_uuid()
     
-    notion_str = f"현재인원 : 0명"
+    players_db = mongo.Player()
+    
+    notion_str = f"현재인원 : {len(players_db.get_players(match_id))}명"
     notion_msg = await ctx.channel.send(notion_str, view=CompetitionJoinView(match_id, game="lol"))
     
     matches_db = mongo.Match()
@@ -103,8 +105,13 @@ async def create_competition_match(
     _ = await ctx.response.send_message(f"{ctx.author.mention}님이 **롤** 대회를 생성하였습니다.", ephemeral=True, delete_after=3)
     
     
-    
-    
+@bot.event
+async def on_ready():
+    matchs_db = mongo.Match()
+    matches = matchs_db.get_all_match()
+    for match in matches:
+        logger.info(f"match : {match}")
+        bot.add_view(CompetitionJoinView(match["match_id"], game=match["game"]))
     
     
     
