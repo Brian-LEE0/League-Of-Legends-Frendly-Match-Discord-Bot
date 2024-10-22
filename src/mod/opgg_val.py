@@ -17,6 +17,30 @@ options.add_experimental_option("excludeSwitches", ["enable-automation"])
 import re
 
 class OPGG:
+    
+    @staticmethod
+    def tier_sort(tier):
+        if tier == "unrank":
+            return 0
+        elif tier == "iron":
+            return 1
+        elif tier == "bronze":
+            return 2
+        elif tier == "silver":
+            return 3
+        elif tier == "gold":
+            return 4
+        elif tier == "platinum":
+            return 5
+        elif tier == "diamond":
+            return 6
+        elif tier == "immortal":
+            return 7
+        elif tier == "radiant":
+            return 8
+        else:
+            return 9
+        
     @staticmethod
     def _get_tier(soup):
         try :

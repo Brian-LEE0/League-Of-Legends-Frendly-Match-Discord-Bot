@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>놀챔스 팀 배정</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #444;
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+        }
+        .players, .team, .tier-description {
+            width: 30%;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .tier-description {
+            width: 20%; /* 티어 설명의 너비를 조금 작게 설정 */
+        }
+        .players h3, .team h3 {
+            text-align: center;
+            color: #0056b3;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin: 5px;
+            cursor: pointer;
+            text-align: center;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            position: relative; /* 아이콘을 절대 위치로 설정할 수 있도록 함 */
+        }
+        li:hover {
+            background-color: #e7f1ff;
+        }
+        .disabled {
+            background-color: #010101 !important;
+            pointer-events: none;
+            color: #fff;
+            opacity: 0.02 !important;
+        }
+
+        /* 티어 색상 */
+        .iron {
+            background-color: #4D4D4D;
+        }
+        .bronze {
+            background-color: #8C5319;
+        }
+        .silver {
+            background-color: #C0C0C0;
+        }
+        .gold {
+            background-color: #FFD700;
+        }
+        .platinum {
+            background-color: #00FF96;
+        }
+        .emerald {
+            background-color: #00FF00;
+        }
+        .diamond {
+            background-color: #00CFFF;
+        }
+        .master {
+            background-color: #FF66CC;
+        }
+        .grand-master {
+            background-color: #FF3366;
+        }
+        .challenger {
+            background-color: #FF9900;
+        }
+
+        .sub-position {
+            opacity: 0.3;
+        }
+
+        /* 팀 목록 스타일 */
+        .team {
+            width: 250px; /* 팀 목록의 너비 설정 */
+            text-align: center;
+        }
+
+        /* 버튼 스타일 */
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #0056b3;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #004494;
+        }
+
+        /* 입력 스타일 */
+        input[type="number"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 50px;
+            text-align: center;
+            margin-left: 10px;
+        }
+
+        /* 구분선 스타일 */
+        hr {
+            border: 1px solid #ddd;
+        }
+
+        /* op.gg 아이콘 스타일 */
+        .opgg-icon {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            right: 10px; /* 아이콘을 li의 오른쪽 바깥에 위치시킴 */
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h1>놀챔스 팀 배정</h1>
+<h4> 제작자: 고라니를삼킨토끼#KR1 </h4>
+<div>
+    <label for="team-count">팀 갯수 선택: </label>
+    <input type="number" id="team-count" min="1" value="3">
+    <button onclick="generateTeams()">팀 생성</button>
+</div>
+<hr />
+
+<div class="container">
+    <div class="tier-description">
+        <h3>티어 설명</h3>
+        <ul>
+            <li class="iron">Iron</li>
+            <li class="bronze">Bronze</li>
+            <li class="silver">Silver</li>
+            <li class="gold">Gold</li>
+            <li class="platinum">Platinum</li>
+            <li class="emerald">Emerald</li>
+            <li class="diamond">Diamond</li>
+            <li class="master">Master</li>
+            <li class="challenger">Challenger</li>
+        </ul>
+    </div>
+
+    <div class="players" id="players-container">
+        <!-- 동적으로 생성된 선수 목록이 여기에 표시됩니다 -->
+    </div>
+
+    <div id="teams-container" class="container">
+        <!-- 팀 목록이 동적으로 생성됩니다 -->
+    </div>
+</div>
+
+<script>
+    let teamCount = 0;
+    const assignedPlayers = new Set();
+    const allPlayers = new Set();
+    let playersData = {}; // 선수 데이터를 저장할 변수
+
+    // 선수 목록을 Flask에서 가져오기
+    async function fetchPlayersData() {
+        const response = await fetch('/api/players');
+        playersData = await response.json();
+        generatePlayerList();
+    }
+
+     // 선수 목록 동적으로 생성
+     function generatePlayerList() {
+        const playersContainer = document.getElementById('players-container');
+        playersContainer.innerHTML = ''; // 기존 선수 목록 지우기
+        for (const position in playersData) {
+            const positionTitle = document.createElement('h3');
+            positionTitle.textContent = position;
+            playersContainer.appendChild(positionTitle);
+
+            const positionList = document.createElement('ul');
+            positionList.id = `${position}-list`;
+
+            playersData[position].forEach(player => {
+                const playerItem = document.createElement('li');
+                playerItem.textContent = player.name;
+                playerItem.classList.add(player.tier); // 티어에 맞는 클래스 추가
+                if (player.sub) {
+                    playerItem.classList.add('sub-position');
+                }
+
+                // op.gg 아이콘 추가
+                const opggIcon = document.createElement('img');
+                opggIcon.src = 'https://play-lh.googleusercontent.com/TVg5CVqKV99o41ekVHnXIBirB-D_hZ9BC2xvwh6eE-468fiBzpGO2QePLGZWLp6IQWa8=w240-h480-rw';
+                opggIcon.classList.add('opgg-icon');
+                opggIcon.onclick = (event) => {
+                    event.stopPropagation(); // 팀 배정과 혼동 방지
+                    window.open(`https://www.op.gg/summoners/kr/${player.name.replace('#','-')}`, '_blank');
+                };
+
+                playerItem.appendChild(opggIcon); // 아이콘 추가
+                playerItem.onclick = () => assignPlayer(playerItem, player.name, position, player.tier);
+                positionList.appendChild(playerItem);
+                allPlayers.add(player.name);
+            });
+            playersContainer.appendChild(positionList);
+        }
+
+        document.getElementById('team-count').value = allPlayers.size / 5 + (allPlayers.size % 5 == 0 ? 0 : 1);
+        generateTeams();
+    }
+
+    // 팀을 동적으로 생성
+    function generateTeams() {
+        teamCount = document.getElementById('team-count').value;
+        const teamsContainer = document.getElementById('teams-container');
+        teamsContainer.innerHTML = ''; // 기존 팀 지우기
+
+        for (let i = 1; i <= teamCount; i++) {
+            const teamDiv = document.createElement('div');
+            teamDiv.classList.add('team');
+
+            const teamTitle = document.createElement('h3');
+            teamTitle.textContent = `팀 ${i}`;
+            teamDiv.appendChild(teamTitle);
+
+            const teamList = document.createElement('ul');
+            teamList.id = `team${i}`;
+            teamDiv.appendChild(teamList);
+
+            teamsContainer.appendChild(teamDiv);
+        }
+    }
+
+    // 플레이어를 팀에 배정하는 함수
+    function assignPlayer(element, player, position, tier) {
+        let selectedTeam = prompt(`플레이어 ${player} (${position})를 어느 팀에 배정하시겠습니까? (1 ~ ${teamCount})`);
+        if (selectedTeam >= 1 && selectedTeam <= teamCount) {
+            const teamList = document.getElementById(`team${selectedTeam}`);
+            const listItem = document.createElement('li');
+            listItem.textContent = `${player} (${position})`;
+            listItem.onclick = function() {
+                removePlayerFromTeam(listItem, player);
+            };
+            listItem.classList.add(tier); // 티어에 맞는 클래스 추가
+
+            // 팀에 플레이어 추가
+            teamList.appendChild(listItem);
+
+            // 플레이어를 비활성화하고 저장
+            element.classList.add('disabled');
+            assignedPlayers.add(player);
+            updatePlayerList();
+        } else {
+            alert(`잘못된 팀 번호입니다. 1 ~ ${teamCount} 사이의 숫자를 선택하세요.`);
+        }
+    }
+
+    // 팀에서 플레이어 제거
+    function removePlayerFromTeam(listItem, player) {
+        listItem.remove();
+        assignedPlayers.delete(player);
+        updatePlayerList();
+    }
+
+    // 플레이어 목록 업데이트 (비활성화/활성화 처리)
+    function updatePlayerList() {
+        const allPlayers = document.querySelectorAll('.players ul li');
+        allPlayers.forEach(playerItem => {
+            const playerName = playerItem.textContent.trim();
+            if (assignedPlayers.has(playerName)) {
+                playerItem.classList.add('disabled');
+            } else {
+                playerItem.classList.remove('disabled');
+            }
+        });
+    }
+
+    // 페이지 로드 시 기본 선수 목록과 팀 생성
+    window.onload = function() {
+        fetchPlayersData(); // 선수 데이터를 가져옴
+        generateTeams(); // 팀 생성
+    };
+</script>
+
+</body>
+</html>

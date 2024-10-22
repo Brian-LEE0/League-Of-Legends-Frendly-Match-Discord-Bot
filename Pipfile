@@ -13,6 +13,8 @@ bs4 = "*"
 load-dotenv = "*"
 selenium = "*"
 pymongo = "*"
+Quart = "*"
+cachetools = "*"
 
 [dev-packages]
 

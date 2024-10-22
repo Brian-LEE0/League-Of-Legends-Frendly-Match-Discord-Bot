@@ -2,16 +2,53 @@ from mod.util.logger import logger
 import aiohttp
 from bs4 import BeautifulSoup
 import re
+from cachetools import cached, TTLCache
 
 class OPGG:
+        
+    @staticmethod
+    def tier_sort(tier):
+        if tier == "unrank":
+            return 0
+        elif tier == "iron":
+            return 1
+        elif tier == "bronze":
+            return 2
+        elif tier == "silver":
+            return 3
+        elif tier == "gold":
+            return 4
+        elif tier == "platinum":
+            return 5
+        elif tier == "emerald":
+            return 6
+        elif tier == "diamond":
+            return 7
+        elif tier == "master":
+            return 8
+        elif tier == "grandmaster":
+            return 9
+        elif tier == "challenger":
+            return 10
+        else:
+            return -1
+        
     @staticmethod
     def _get_tier(soup):
         try :
-            tier = soup.find("div","rank-item")
-            if tier is None :
+            tiers_raw = soup.find_all("div","rank-item")
+            if tiers_raw is None :
                 return "unranked"
-            tier = tier.find("span").text.split(" ")[0].lower()
-            return tier
+            tiers = []
+            for tier in tiers_raw[:5]:
+                tier = tier.find("span").text.split(" ")[0].lower()
+                tiers.append(tier)
+                
+            # sort
+            if len(tiers) == 1:
+                return tiers[0]
+            else:
+                return sorted(tiers, key=lambda x : OPGG().tier_sort(x), reverse=True)[0]
         except Exception as e:
             logger.info(e)
             raise Exception("⚠️ 존재하지 않는 아이디 티어")
@@ -32,6 +69,7 @@ class OPGG:
             raise Exception("⚠️ 존재하지 않는 아이디 챔프")
         
     @staticmethod
+    # @cached(cache=TTLCache(maxsize=1024, ttl=600))
     async def get_info(league_name = "고라니를삼킨토끼#KR1",
                         timeout = 10.0, 
                         retry_cnt = 0,
