@@ -66,15 +66,13 @@ async def get_players_data():
         p_info = {
                 "name": player["lol_id1"],
                 "tier": tier,
+                "discord_id": str(player["discord_id"])
             }
+        sub_info = p_info.copy()
+        sub_info["sub"] = True
         if "position1" in player and player["position1"] != "":
             players_data[player["position1"]].append(p_info)
         if "position2" in player and player["position2"] != "":
-            sub_info = {
-                "name": player["lol_id1"],
-                "tier": tier,
-                "sub": True
-            }
             players_data[player["position2"]].append(sub_info)
         if "position3" in player and player["position3"] != "":
             players_data[player["position3"]].append(sub_info)

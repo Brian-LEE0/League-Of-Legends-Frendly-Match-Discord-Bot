@@ -141,6 +141,18 @@
             transform: translateY(-50%);
             cursor: pointer;
         }
+
+        /* 디스코드 아이콘 스타일 */
+        .discord-icon {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            right: 40px; /* 아이콘을 li의 오른쪽 바깥에 위치시킴 */
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
@@ -221,7 +233,17 @@
                     window.open(`https://www.op.gg/summoners/kr/${player.name.replace('#','-')}`, '_blank');
                 };
 
+                // discord 아이콘 추가
+                const discordIcon = document.createElement('img');
+                discordIcon.src = 'data:image/webp;base64,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';
+                discordIcon.classList.add('discord-icon');
+                discordIcon.onclick = (event) => {
+                    event.stopPropagation(); // 팀 배정과 혼동 방지
+                    window.open(`discord://~/users/${player.discord_id}`, '_blank');
+                };
+
                 playerItem.appendChild(opggIcon); // 아이콘 추가
+                playerItem.appendChild(discordIcon); // 아이콘 추가
                 playerItem.onclick = () => assignPlayer(playerItem, player.name, position, player.tier);
                 positionList.appendChild(playerItem);
                 allPlayers.add(player.name);
