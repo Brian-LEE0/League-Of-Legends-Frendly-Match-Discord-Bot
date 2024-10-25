@@ -2,7 +2,7 @@ from mod.util.logger import logger
 import aiohttp
 from bs4 import BeautifulSoup
 import re
-from cachetools import cached, TTLCache
+from async_lru import alru_cache
 
 class OPGG:
         
@@ -70,7 +70,7 @@ class OPGG:
             raise Exception("⚠️ 존재하지 않는 아이디 챔프")
         
     @staticmethod
-    # @cached(cache=TTLCache(maxsize=1024, ttl=600))
+    @alru_cache(maxsize=1024, ttl=60*60*24)
     async def get_info(league_name = "고라니를삼킨토끼#KR1",
                         timeout = 10.0, 
                         retry_cnt = 0,

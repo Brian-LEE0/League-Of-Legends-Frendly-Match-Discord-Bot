@@ -81,6 +81,5 @@ async def get_players_data():
     for key in players_data.keys():
         players_data[key] = sorted(players_data[key], key=lambda x: OPGG.tier_sort(x["tier"]), reverse=True)
     
-    print(players_data)
     return jsonify(players_data)
 

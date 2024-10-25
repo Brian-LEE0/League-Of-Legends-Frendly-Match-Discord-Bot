@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
+from async_lru import alru_cache
 
 options = Options()
 options.page_load_strategy = 'eager'
@@ -69,6 +70,7 @@ class OPGG:
             return []
         
     @staticmethod
+    @alru_cache(maxsize=1024, ttl=60*60*24)
     async def get_info(val_name = "고라니를삼킨토끼#KR1",
                         timeout = 10.0, 
                         retry_cnt = 0):
