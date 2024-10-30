@@ -1,3 +1,4 @@
+from typing import Dict, List
 import discord
 
 from mod.discordbot import Match
@@ -133,9 +134,8 @@ class ToolView(discord.ui.View):
         
     @discord.ui.button(label="맵뽑기", style=discord.ButtonStyle.green, row = 0)
     async def match_info(self, button, interaction):
-        await interaction.response.defer()
-        embed = await get_random_val_map(interaction.user)
-        await interaction.followup.send(embed=embed)
+        map_list = await OPGGVal.get_map()
+        await interaction.response.send_modal(ElectMapForm(map_list))
         
 class MatchInfoView(discord.ui.View):
     def __init__(self, key, timeout=None):
@@ -258,9 +258,8 @@ class TeamDraftView(discord.ui.View):
         
     @discord.ui.button(label="맵뽑기", style=discord.ButtonStyle.green, row = 1)
     async def match_info(self, button, interaction):
-        await interaction.response.defer()
-        embed = await get_random_val_map(interaction.user)
-        await interaction.followup.send(embed=embed)
+        map_list = await OPGGVal.get_map()
+        await interaction.response.send_modal(ElectMapForm(map_list))
         
 class MatchJoinForm(discord.ui.Modal):
     def __init__(self, message, key, user, game=""):
@@ -323,6 +322,41 @@ class MatchJoinForm(discord.ui.Modal):
             await Match[self.key].add_player(self.user, interaction)
             if my_league_full_name:
                 logger.info(f"Suggestion : {my_league_full_name}")
+        except Exception as e:
+            logger.error(e)
+            await interaction.followup.send(f"에러발생, {e}", ephemeral=True, delete_after=20)
+            
+
+
+class ElectMapForm(discord.ui.Modal):
+    def __init__(self, map_list: Dict[str, str], timeout=None):
+        super().__init__(title="맵뽑기", timeout=timeout)
+        self.org_map_list = map_list
+        self.map_candidates = discord.ui.InputText(
+            style=discord.InputTextStyle.long,
+            label="맵 후보",
+            value = "\n".join(list(map_list.keys())),
+            required=True,
+            max_length=500,
+        )
+        self.add_item(self.map_candidates)
+        
+    async def callback(self, interaction):
+        try :
+            await interaction.response.defer()
+            map_candidates_list = self.map_candidates.value.split("\n")
+            map_candidates_list = [m.strip() for m in map_candidates_list if m.strip() != ""]
+            print(map_candidates_list)
+            for om in self.org_map_list.copy():
+                if om not in map_candidates_list:
+                    self.org_map_list.pop(om)
+            for m in map_candidates_list:
+                if m not in self.org_map_list:
+                    self.org_map_list.update({m: ""})
+            
+            embed = await get_random_val_map(self.org_map_list, interaction.user)
+            await interaction.followup.send(embed=embed)
+            return 
         except Exception as e:
             logger.error(e)
             await interaction.followup.send(f"에러발생, {e}", ephemeral=True, delete_after=20)

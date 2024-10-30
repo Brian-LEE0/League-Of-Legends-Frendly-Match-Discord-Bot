@@ -108,7 +108,8 @@ class OPGG:
                     ) -> Dict[str, str]:
         if retry_cnt >= 5:
             return None
-        async with aiohttp.ClientSession(cookies = {"_ol":"en_US"},
+        
+        async with aiohttp.ClientSession(cookies = {"_ol":"ko_KR"},
                                         timeout=aiohttp.ClientTimeout(total=timeout)) as session:
             logger.info(f"req to : https://valorant.op.gg/maps")
             async with session.get(f"https://valorant.op.gg/maps") as response:
@@ -116,7 +117,8 @@ class OPGG:
                 try:
                     map_list = soup.find("ul", "css-cwj72x").find_all("li")
                     map_list = { m.find("div","name").text: m.find("img")["src"] for m in map_list }
-                    for key in ["District", "Kasbah", "Glitch", "Drift", "Piazza"]:
+                    # for key in ["District", "Kasbah", "Glitch", "Drift", "Piazza"]:
+                    for key in ["디스트릭트", "카즈바", "글리치", "드리프트", "피아자"]:
                         if key in map_list:
                             del map_list[key]
                     return map_list
