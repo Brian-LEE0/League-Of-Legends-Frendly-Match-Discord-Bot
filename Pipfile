@@ -15,6 +15,7 @@ selenium = "*"
 pymongo = "*"
 Quart = "*"
 async-lru = "*"
+typing = "*"
 
 [dev-packages]
 

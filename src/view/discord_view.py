@@ -9,6 +9,8 @@ from mod.util.crud import *
 import re
 import random
 
+from view.embed.val import get_random_val_map
+
 class MatchJoinView(discord.ui.View):
     def __init__(self, key, timeout=None, game=""):
         super().__init__(timeout=timeout)
@@ -79,6 +81,7 @@ class MatchJoinView(discord.ui.View):
             await match.del_message()
         else:
             await interaction.followup.send(f"{interaction.user.mention}님이 생성한 매치가 아닙니다.", ephemeral=True, delete_after=3)
+            
 class PlayerDeleteSelect(discord.ui.Select):
     def __init__(self, match, usr_list):
         self.match = match
@@ -127,6 +130,12 @@ class ToolView(discord.ui.View):
             return await interaction.followup.send(f"***⚠️ 주의! 선수를 매치에서 제거합니다.***",
                                                     view=PlayerDeleteView(match, draft_info["list"]), ephemeral=True, delete_after=30)
         await interaction.followup.send(f"참가를 신청한 선수가 없습니다.", ephemeral=True, delete_after=3)
+        
+    @discord.ui.button(label="맵뽑기", style=discord.ButtonStyle.green, row = 0)
+    async def match_info(self, button, interaction):
+        await interaction.response.defer()
+        embed = await get_random_val_map(interaction.user)
+        await interaction.followup.send(embed=embed)
         
 class MatchInfoView(discord.ui.View):
     def __init__(self, key, timeout=None):
@@ -246,6 +255,12 @@ class TeamDraftView(discord.ui.View):
             await self.change_msg(interaction)
         except Exception as e :
             return await interaction.response.send_message(content=f"에러발생 {e}", ephemeral=True, delete_after=3)
+        
+    @discord.ui.button(label="맵뽑기", style=discord.ButtonStyle.green, row = 1)
+    async def match_info(self, button, interaction):
+        await interaction.response.defer()
+        embed = await get_random_val_map(interaction.user)
+        await interaction.followup.send(embed=embed)
         
 class MatchJoinForm(discord.ui.Modal):
     def __init__(self, message, key, user, game=""):

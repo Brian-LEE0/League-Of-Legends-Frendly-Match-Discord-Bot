@@ -1,9 +1,11 @@
+import aiohttp
 from mod.util.logger import logger
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from async_lru import alru_cache
+from typing import Dict
 
 options = Options()
 options.page_load_strategy = 'eager'
@@ -18,7 +20,6 @@ options.add_experimental_option("excludeSwitches", ["enable-automation"])
 import re
 
 class OPGG:
-    
     @staticmethod
     def tier_sort(tier):
         if tier == "unrank":
@@ -40,7 +41,7 @@ class OPGG:
         elif tier == "radiant":
             return 8
         else:
-            return 9
+            return -1
         
     @staticmethod
     def _get_tier(soup):
@@ -60,10 +61,11 @@ class OPGG:
     @staticmethod
     def _get_champ_list(soup):
         try :
-            champ_list = soup.find("table","css-1iy7n7q").find_all("tr")
+            print(soup.find("table","css-1iy7n7q"))
+            champ_list = soup.find("table","css-1iy7n7q").find("tr")
             champ_list = list(map(lambda champ : [re.sub("[^a-z]","",champ.find("div","name-avg-score").find("a").text.lower())],
-                                  champ_list))
-            champ_list = champ_list[:(3 if len(champ_list) > 3 else len(champ_list))]
+                                  champ_list))[:3]
+            print(champ_list)
             return champ_list
         except Exception as e:
             logger.info(e)
@@ -83,12 +85,37 @@ class OPGG:
         soup = BeautifulSoup(html, "html.parser")
         is_private = soup.find("div","css-nam5yt")
         if is_private is not None :
-            raise Exception(f":warning: https://valorant.op.gg/profile/{val_name.replace('#','-')} 에서 비공개 상태를 해제 해주세요.")
+            # raise Exception(f":warning: https://valorant.op.gg/profile/{val_name.replace('#','-')} 에서 비공개 상태를 해제 해주세요.")
+            return {"cur_tier" : "unrank",
+                "most_3" : []}
         tier = OPGG._get_tier(soup)
         if tier is None :
-            raise Exception(f":warning: https://valorant.op.gg/profile/{val_name.replace('#','-')} 에서 계정 상태를 확인하고 다시 신청해주세요.")
+            return {"cur_tier" : "unrank",
+                "most_3" : []}
+            # raise Exception(f":warning: https://valorant.op.gg/profile/{val_name.replace('#','-')} 에서 계정 상태를 확인하고 다시 신청해주세요.")
         cl = OPGG._get_champ_list(soup)
         logger.info({"cur_tier" : tier,
                 "most_3" : cl})
         return {"cur_tier" : tier,
                 "most_3" : cl}
+        
+    @staticmethod
+    @alru_cache(maxsize=1024, ttl=60*60*24)
+    async def get_map(timeout = 10.0, 
+                        retry_cnt = 0,
+                        if_null_return_error = False,
+                        if_unranked_return_error = False
+                    ) -> Dict[str, str]:
+        if retry_cnt >= 5:
+            return None
+        async with aiohttp.ClientSession(cookies = {"_ol":"en_US"},
+                                        timeout=aiohttp.ClientTimeout(total=timeout)) as session:
+            logger.info(f"req to : https://valorant.op.gg/maps")
+            async with session.get(f"https://valorant.op.gg/maps") as response:
+                soup = BeautifulSoup(await response.text(), "html.parser")
+                try:
+                    map_list = soup.find("ul", "css-cwj72x").find_all("li")
+                    map_list = { m.find("div","name").text: m.find("img")["src"] for m in map_list }
+                    return map_list
+                except Exception as e:
+                    raise e

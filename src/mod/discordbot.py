@@ -113,6 +113,8 @@ async def on_ready():
         logger.info(f"match : {match}")
         bot.add_view(CompetitionJoinView(match["match_id"], game=match["game"]))
     
+    print(await OPGGVal.get_map())
+    
     
     
 
