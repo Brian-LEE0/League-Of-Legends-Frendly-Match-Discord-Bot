@@ -116,6 +116,9 @@ class OPGG:
                 try:
                     map_list = soup.find("ul", "css-cwj72x").find_all("li")
                     map_list = { m.find("div","name").text: m.find("img")["src"] for m in map_list }
+                    for key in ["District", "Kasbah", "Glitch", "Drift", "Piazza"]:
+                        if key in map_list:
+                            del map_list[key]
                     return map_list
                 except Exception as e:
                     raise e
