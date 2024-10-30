@@ -330,7 +330,8 @@ class MatchJoinForm(discord.ui.Modal):
 
 class ElectMapForm(discord.ui.Modal):
     def __init__(self, map_list: Dict[str, str], timeout=None):
-        super().__init__(title="맵뽑기", timeout=timeout)
+        randnum = random.randint(0, 100000000)
+        super().__init__(title=f"맵뽑기", timeout=timeout, custom_id=f"map_select_{randnum}")
         self.org_map_list = map_list
         self.map_candidates = discord.ui.InputText(
             style=discord.InputTextStyle.long,
@@ -347,14 +348,16 @@ class ElectMapForm(discord.ui.Modal):
             map_candidates_list = self.map_candidates.value.split("\n")
             map_candidates_list = [m.strip() for m in map_candidates_list if m.strip() != ""]
             print(map_candidates_list)
-            for om in self.org_map_list.copy():
+            new_map_list = self.org_map_list.copy()
+            for om in new_map_list.copy():
                 if om not in map_candidates_list:
-                    self.org_map_list.pop(om)
+                    new_map_list.pop(om)
             for m in map_candidates_list:
-                if m not in self.org_map_list:
-                    self.org_map_list.update({m: ""})
+                if m not in new_map_list:
+                    new_map_list.update({m: ""})
             
-            embed = await get_random_val_map(self.org_map_list, interaction.user)
+            embed = await get_random_val_map(new_map_list, interaction.user)
+            self.map_candidates.value = "\n".join(list(self.org_map_list.keys()))
             await interaction.followup.send(embed=embed)
             return 
         except Exception as e:
