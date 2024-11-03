@@ -107,13 +107,11 @@ async def create_competition_match(
     
 @bot.slash_command(name="벤픽", description="")  # Create a slash command
 async def create_banpick(
-    ctx,
-    ):
-    await ctx.response.defer()
+    ctx):
     bp = BanPick()
-    await ctx.followup.send_message(f"""벤픽 링크가 생성되었습니다!
-블루팀 : {bp.get_ready_link(is_red=False)}
-레드팀 : {bp.get_ready_link(is_red=True)}""")
+    await ctx.response.send_message(f"""벤픽 링크가 생성되었습니다!
+[블루팀]({bp.get_ready_link(is_red=False)})
+[레드팀]({bp.get_ready_link(is_red=True)})""")
     
     return
     
