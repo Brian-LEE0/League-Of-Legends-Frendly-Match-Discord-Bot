@@ -4,6 +4,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = discord.Bot(description="롤 내전을 위한 봇 입니다", intents=intents)  # Create a bot object
 
+from mod.banpick import BanPick
 from mod.data.match import MatchInfo
 from mod.data.consts import *
 
@@ -103,6 +104,19 @@ async def create_competition_match(
     matches_db = mongo.Match()
     matches_db.create_match("lol", match_id, notion_msg.id, max)
     _ = await ctx.response.send_message(f"{ctx.author.mention}님이 **롤** 대회를 생성하였습니다.", ephemeral=True, delete_after=3)
+    
+@bot.slash_command(name="롤대회_벤픽", description="")  # Create a slash command
+async def banpick(
+    ctx,
+    ):
+    await ctx.response.defer()
+    bp = BanPick()
+    await ctx.followup.send(f"""벤픽 링크가 생성되었습니다!
+블루팀 : {bp.get_ready_link(is_red=False)}
+레드팀 : {bp.get_ready_link(is_red=True)}""")
+    
+    return
+    
     
     
 @bot.event

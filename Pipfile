@@ -16,6 +16,7 @@ pymongo = "*"
 Quart = "*"
 async-lru = "*"
 typing = "*"
+websocket-client = "*"
 
 [dev-packages]
 
