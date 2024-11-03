@@ -105,13 +105,13 @@ async def create_competition_match(
     matches_db.create_match("lol", match_id, notion_msg.id, max)
     _ = await ctx.response.send_message(f"{ctx.author.mention}님이 **롤** 대회를 생성하였습니다.", ephemeral=True, delete_after=3)
     
-@bot.slash_command(name="롤대회_벤픽", description="")  # Create a slash command
-async def banpick(
+@bot.slash_command(name="벤픽", description="")  # Create a slash command
+async def create_banpick(
     ctx,
     ):
     await ctx.response.defer()
     bp = BanPick()
-    await ctx.followup.send(f"""벤픽 링크가 생성되었습니다!
+    await ctx.followup.send_message(f"""벤픽 링크가 생성되었습니다!
 블루팀 : {bp.get_ready_link(is_red=False)}
 레드팀 : {bp.get_ready_link(is_red=True)}""")
     
