@@ -109,7 +109,7 @@ async def create_competition_match(
 async def create_banpick(
     ctx):
     bp = BanPick()
-    await ctx.response.send_message(f"""벤픽 링크가 생성되었습니다!
+    await ctx.channel.send(f"""벤픽 링크가 생성되었습니다!
 [블루팀]({bp.get_ready_link(is_red=False)})
 [레드팀]({bp.get_ready_link(is_red=True)})""")
     
