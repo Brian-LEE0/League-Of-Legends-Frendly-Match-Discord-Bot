@@ -4,7 +4,8 @@ intents = discord.Intents.default()
 intents.message_content = True
 bot = discord.Bot(description="롤 내전을 위한 봇 입니다", intents=intents)  # Create a bot object
 
-from mod.banpick import BanPick
+# from mod.banpick import BanPick
+from mod.banpick_v2 import BanPick
 from mod.data.match import MatchInfo
 from mod.data.consts import *
 
@@ -107,11 +108,16 @@ async def create_competition_match(
     
 @bot.slash_command(name="벤픽", description="")  # Create a slash command
 async def create_banpick(
-    ctx):
-    bp = BanPick()
-    await ctx.channel.send(f"""벤픽 링크가 생성되었습니다!
-[블루팀]({bp.get_ready_link(is_red=False)})
-[레드팀]({bp.get_ready_link(is_red=True)})""")
+    ctx,
+    match_name: discord.commands.Option(str, "매치 이름"),
+    red_team_name: discord.commands.Option(str, "레드팀 이름"),
+    blue_team_name: discord.commands.Option(str, "블루팀 이름"),
+    ):
+    bp = BanPick(match_name, red_team_name, blue_team_name)
+    await ctx.response.send_message(f"""{match_name}의 벤픽 링크가 생성되었습니다!
+블루팀 팀장 ({red_team_name}): {bp.get_ready_link(is_red=False)}
+레드팀 팀장 ({blue_team_name}): {bp.get_ready_link(is_red=True)}
+관전: {bp.get_ready_link(is_spec=True)}""")
     
     return
     
