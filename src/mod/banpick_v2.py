@@ -39,8 +39,9 @@ class BanPick:
         }
         res = requests.post(url, headers=headers, json=data).json()
         self.match_id = res["id"]
-        self.red_auth = res["auth"][0]
-        self.blue_auth = res["auth"][1]
+        self.blue_auth = res["auth"][0]
+        self.red_auth = res["auth"][1]
+        
         
     def get_ready_link(self, is_red = False, is_spec=False):
         if is_red:

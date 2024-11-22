@@ -109,14 +109,14 @@ async def create_competition_match(
 @bot.slash_command(name="벤픽", description="")  # Create a slash command
 async def create_banpick(
     ctx,
-    match_name: discord.commands.Option(str, "매치 이름"),
-    red_team_name: discord.commands.Option(str, "레드팀 이름"),
-    blue_team_name: discord.commands.Option(str, "블루팀 이름"),
+    match_name: discord.commands.Option(str, name="매치이름"),
+    blue_team_name: discord.commands.Option(str, name="블루팀이름"),
+    red_team_name: discord.commands.Option(str, name="레드팀이름")
     ):
-    bp = BanPick(match_name, red_team_name, blue_team_name)
-    await ctx.response.send_message(f"""{match_name}의 벤픽 링크가 생성되었습니다!
-블루팀 팀장 ({red_team_name}): {bp.get_ready_link(is_red=False)}
-레드팀 팀장 ({blue_team_name}): {bp.get_ready_link(is_red=True)}
+    bp = BanPick(match_name, blue_team_name, red_team_name)
+    await ctx.response.send_message(f"""**{match_name}**의 벤픽 링크가 생성되었습니다!
+블루팀 팀장 **({blue_team_name})**: {bp.get_ready_link(is_red=False)}
+레드팀 팀장 **({red_team_name})**: {bp.get_ready_link(is_red=True)}
 관전: {bp.get_ready_link(is_spec=True)}""")
     
     return
