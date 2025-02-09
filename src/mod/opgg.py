@@ -36,7 +36,7 @@ class OPGG:
     @staticmethod
     def _get_tier(soup):
         try :
-            tier_sec = soup.find("div","css-1wk31w7 egd6cgn0")
+            tier_sec = soup.find("div","css-xm62d3 e1l3ivmk0")
             tiers_raw = tier_sec.find_all("div","rank-item")
             if tiers_raw is None :
                 return "unranked"
