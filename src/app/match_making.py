@@ -47,7 +47,8 @@ async def get_players_data(tournament_id):
         "정글": [],
         "미드": [],
         "원딜": [],
-        "서폿": []
+        "서폿": [],
+        "서브": []
     }
     
     async def fetch_player_info(player):
@@ -61,7 +62,7 @@ async def get_players_data(tournament_id):
     
     players_opgg_info = await fetch_all_players_info(players)
     
-    for (player, opgg) in zip(players, players_opgg_info):
+    for idx, (player, opgg) in enumerate(zip(players, players_opgg_info)):
         tier = opgg["cur_tier"]
         p_info = {
                 "name": player["lol_id1"],
@@ -70,6 +71,9 @@ async def get_players_data(tournament_id):
             }
         sub_info = p_info.copy()
         sub_info["sub"] = True
+        if idx >= len(players) // 5 * 5:
+            players_data["서브"].append(p_info)
+            continue
         if "position1" in player and player["position1"] != "":
             players_data[player["position1"]].append(p_info)
         if "position2" in player and player["position2"] != "":
