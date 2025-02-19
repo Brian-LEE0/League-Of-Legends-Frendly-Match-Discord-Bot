@@ -199,7 +199,7 @@
 
     // 선수 목록을 Flask에서 가져오기
     async function fetchPlayersData() {
-        const response = await fetch('/api/players');
+        const response = await fetch('/api/tournament/{{ tournament_id }}/players');
         playersData = await response.json();
         generatePlayerList();
     }

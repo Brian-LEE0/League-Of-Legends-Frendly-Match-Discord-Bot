@@ -6,13 +6,13 @@ from mod.opgg import OPGG
 
 app = Quart(__name__)
 
-@app.route('/')
-async def index():
+@app.route('/<tournament_id>')
+async def index(tournament_id):
     
-    return await render_template('player.html')
+    return await render_template('player.html', tournament_id=tournament_id)
 
-@app.route('/api/players', methods=['GET'])
-async def get_players_data():
+@app.route('/api/tournament/<tournament_id>/players', methods=['GET'])
+async def get_players_data(tournament_id):
     
     # players_data = {
     #     "탑": [
@@ -41,7 +41,7 @@ async def get_players_data():
     # }
     
     db = Player()
-    players = db.get_players("c90462af-afda-4111-834b-bfa5c13f099a")
+    players = db.get_players(tournament_id)
     players_data = {
         "탑": [],
         "정글": [],
