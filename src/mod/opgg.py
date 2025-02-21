@@ -44,6 +44,13 @@ class OPGG:
             for tier in tiers_raw[:5]:
                 tier = tier.find("span").text.split(" ")[0].lower()
                 tiers.append(tier)
+            
+            try:
+                tier_cur = soup.find("div", "css-1wk31w7 eaj0zte0")
+                tier_raw = tier_cur.find("div", "tier").text.split(" ")[0].lower()
+                tiers.append(tier_raw)
+            except:
+                pass
                 
             # sort
             if len(tiers) == 1:
