@@ -212,7 +212,7 @@ class TeamDraftView(discord.ui.View):
             return await interaction.response.edit_message(content = ctx, embed = draft_info["embed"], view=self)
         await interaction.response.edit_message(embed = draft_info["embed"], view=self)
 
-    @discord.ui.button(label="1팀 등록", style=discord.ButtonStyle.blurple, row = 1)
+    @discord.ui.button(label="1팀 등록", style=discord.ButtonStyle.blurple, row = 0)
     async def enroll_team1(self, button, interaction):
         try:
             if not self.is_valid_req():
@@ -228,7 +228,7 @@ class TeamDraftView(discord.ui.View):
         except Exception as e:
             return await interaction.response.send_message(content=f"올바른 유저를 선택해주세요. {e}", ephemeral=True, delete_after=3)
         
-    @discord.ui.button(label="2팀 등록", style=discord.ButtonStyle.red, row = 1)
+    @discord.ui.button(label="2팀 등록", style=discord.ButtonStyle.red, row = 0)
     async def enroll_team2(self, button, interaction):
         try:
             if not self.is_valid_req():
@@ -243,7 +243,7 @@ class TeamDraftView(discord.ui.View):
         except Exception as e:
             return await interaction.response.send_message(content=f"올바른 유저를 선택해주세요. {e}", ephemeral=True, delete_after=3)
 
-    @discord.ui.button(label="되돌리기", style=discord.ButtonStyle.gray, row = 1)
+    @discord.ui.button(label="되돌리기", style=discord.ButtonStyle.gray, row = 0)
     async def match_info(self, button, interaction):
         try :
             last_idx = self.selected.pop()

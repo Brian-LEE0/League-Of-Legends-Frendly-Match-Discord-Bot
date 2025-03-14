@@ -5,7 +5,7 @@ intents.message_content = True
 bot = discord.Bot(description="롤 내전을 위한 봇 입니다", intents=intents)  # Create a bot object
 
 # from mod.banpick import BanPick
-from mod.banpick_v2 import BanPick
+from mod.banpick_v3 import BanPick
 from mod.data.match import MatchInfo
 from mod.data.consts import *
 
