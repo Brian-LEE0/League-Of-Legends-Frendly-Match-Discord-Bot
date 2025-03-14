@@ -24,7 +24,7 @@ class BanPick:
     def get_ready_link(self, is_red = False, is_spec=False):
         ban = urllib.parse.quote("나나이슬")
         if is_red:
-            return f"https://nolchamps-draft.burumarket.shop/rooms/{self.room_name}?team=red&ban={ban}"
+            return f"https://nolchamps-draft.burumarket.shop/rooms/{self.room_name}?side=red&ban={ban}"
         elif is_spec:
-            return f"https://nolchamps-draft.burumarket.shop/rooms/{self.room_name}?team=spec&ban={ban}"
-        return f"https://nolchamps-draft.burumarket.shop/rooms/{self.room_name}?team=blue&ban={ban}"
+            return f"https://nolchamps-draft.burumarket.shop/rooms/{self.room_name}?side=spec&ban={ban}"
+        return f"https://nolchamps-draft.burumarket.shop/rooms/{self.room_name}?side=blue&ban={ban}"
