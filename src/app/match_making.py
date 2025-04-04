@@ -51,22 +51,22 @@ async def get_players_data(tournament_id):
         "서브": []
     }
     
-    async def fetch_player_info(player):
-        players_opgg_info = await OPGG.get_info(league_name=player["lol_id1"])
-        return players_opgg_info
+    # async def fetch_player_info(player):
+    #     players_opgg_info = await OPGG.get_info(league_name=player["lol_id1"])
+    #     return players_opgg_info
     
-    async def fetch_all_players_info(players):
-        tasks = [fetch_player_info(player) for player in players]
-        results = await asyncio.gather(*tasks)
-        return results
+    # async def fetch_all_players_info(players):
+    #     tasks = [fetch_player_info(player) for player in players]
+    #     results = await asyncio.gather(*tasks)
+    #     return results
     
-    players_opgg_info = await fetch_all_players_info(players)
+    # players_opgg_info = await fetch_all_players_info(players)
     
-    for idx, (player, opgg) in enumerate(zip(players, players_opgg_info)):
-        tier = opgg["cur_tier"]
+    # for idx, (player, opgg) in enumerate(zip(players, players_opgg_info)):
+    for idx, player in enumerate(players):
         p_info = {
                 "name": player["lol_id1"],
-                "tier": tier,
+                "tier": player["tier"],
                 "discord_id": str(player["discord_id"])
             }
         sub_info = p_info.copy()

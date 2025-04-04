@@ -40,7 +40,7 @@ class Player:
         lol_id1,
         lol_id2,
         lol_id3,
-        
+        tier,
         position1,
         position2,
         position3,
@@ -56,6 +56,7 @@ class Player:
             "position1": position1,
             "position2": position2,
             "position3": position3,
+            "tier": tier,
             "is_streamable": is_streamable,
             "datetime": datetime.datetime.now(),
             "suggestion": suggestion

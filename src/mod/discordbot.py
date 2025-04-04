@@ -101,6 +101,7 @@ async def create_competition_match(
     
     notion_str = f"현재인원 : {len(players_db.get_players(match_id))}명"
     notion_msg = await ctx.channel.send(notion_str, view=CompetitionJoinView(match_id, game="lol"))
+    _static_msg = await ctx.channel.send(f"참가자 명단: https://nolchamps.burumarket.shop/{match_id}")
     
     matches_db = mongo.Match()
     matches_db.create_match("lol", match_id, notion_msg.id, max)

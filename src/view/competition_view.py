@@ -62,13 +62,22 @@ class CompetitionJoinForm(discord.ui.Modal):
         )
         self.add_item(self.league_2)
         
-        self.is_streamable = discord.ui.InputText(
+        self.tier = discord.ui.InputText(
             style=discord.InputTextStyle.singleline,
-            label="스트리밍(OBS 프로그램 사용) 가능 여부 (가능/불가능)",
-            value="가능",
-            required=True,
+            label="최근 5년간 솔랭 최고티어 (한글로) *위장티어 발견 시 영구 제명",
+            placeholder="언랭/아이언/브론즈/실버/골드/플래티넘/에메랄드/다이아/마스터/그마/챌린저",
+            required=False,
+            max_length=32,
         )
-        self.add_item(self.is_streamable)
+        self.add_item(self.tier)
+        
+        # self.is_streamable = discord.ui.InputText(
+        #     style=discord.InputTextStyle.singleline,
+        #     label="스트리밍(OBS 프로그램 사용) 가능 여부 (가능/불가능)",
+        #     value="가능",
+        #     required=True,
+        # )
+        # self.add_item(self.is_streamable)
         
         self.position_1 = discord.ui.InputText(
             placeholder="미드",
@@ -90,26 +99,43 @@ class CompetitionJoinForm(discord.ui.Modal):
         try :
             await interaction.response.defer()
             # if() : # league name is exist
-            try :
-                _ = await OPGG.get_info(self.league_1.value, if_null_return_error=True, if_unranked_return_error=True)
+            # try :
+            #     _ = await OPGG.get_info(self.league_1.value, if_null_return_error=True, if_unranked_return_error=True)
                 
-                if self.league_2.value != "":
-                    _ = await OPGG.get_info(self.league_2.value, if_null_return_error=True, if_unranked_return_error=True)
+            #     if self.league_2.value != "":
+            #         _ = await OPGG.get_info(self.league_2.value, if_null_return_error=True, if_unranked_return_error=True)
                 
-                # if self.league_3.value != "":
-                #     _ = await OPGG.get_info(self.league_3.value, if_null_return_error=True, if_unranked_return_error=True)
+            #     # if self.league_3.value != "":
+            #     #     _ = await OPGG.get_info(self.league_3.value, if_null_return_error=True, if_unranked_return_error=True)
                     
-            except Exception as e:
-                raise Exception(f"롤 닉네임을 확인해주세요. {e}")
+            # except Exception as e:
+            #     raise Exception(f"롤 닉네임을 확인해주세요. {e}")
             
-            if self.is_streamable.value not in ["가능", "불가능"]:
-                raise Exception("스트리밍 가능 여부는 가능/불가능 중 하나로 입력해주세요.")
+            # if self.is_streamable.value not in ["가능", "불가능"]:
+            #     raise Exception("스트리밍 가능 여부는 가능/불가능 중 하나로 입력해주세요.")
             
             if self.position_1.value not in ["탑", "미드", "원딜", "서폿", "정글"]:
                 raise Exception("주포지션은 탑, 미드, 원딜, 서폿, 정글 중 하나로 입력해주세요.")
             
             if self.position_2.value not in ["탑", "미드", "원딜", "서폿", "정글"]:
                 raise Exception("부포지션1은 탑, 미드, 원딜, 서폿, 정글 중 하나로 입력해주세요.")
+            
+            if self.tier.value not in ["언랭", "아이언", "브론즈", "실버", "골드", "플래티넘", "에메랄드", "다이아", "마스터", "그마", "챌린저"]:
+                raise Exception("최근 3년간 솔랭 최고티어는 언랭, 아이언, 브론즈, 실버, 골드, 플래티넘, 에메랄드, 다이아, 마스터, 그마, 챌린저 중 하나로 입력해주세요.")
+            
+            tier_eng = {
+                "언랭": "unranked",
+                "아이언": "iron",
+                "브론즈": "bronze",
+                "실버": "silver",
+                "골드": "gold",
+                "플래티넘": "platinum",
+                "에메랄드": "emerald",
+                "다이아": "diamond",
+                "마스터": "master",
+                "그마": "grandmaster",
+                "챌린저": "challenger"
+            }
             
             players_db = mongo.Player()
             players_db.create_player(
@@ -118,10 +144,11 @@ class CompetitionJoinForm(discord.ui.Modal):
                 lol_id1=self.league_1.value,
                 lol_id2=self.league_2.value,
                 lol_id3="",
+                tier=tier_eng[self.tier.value],
                 position1=self.position_1.value,
                 position2=self.position_2.value,
                 position3="",
-                is_streamable=self.is_streamable.value,
+                is_streamable="",
             )
             
             players = players_db.get_players(self.match_id)
