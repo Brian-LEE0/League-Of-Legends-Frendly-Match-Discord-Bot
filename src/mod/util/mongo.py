@@ -1,5 +1,6 @@
+import datetime
 from pymongo import MongoClient
-client = MongoClient("192.168.50.124", 27017)
+client = MongoClient("192.168.0.207", 27017)
 db = client["lol_fm_dbot"]
     
 class Match:
@@ -56,6 +57,7 @@ class Player:
             "position2": position2,
             "position3": position3,
             "is_streamable": is_streamable,
+            "datetime": datetime.datetime.now(),
             "suggestion": suggestion
         })
         
